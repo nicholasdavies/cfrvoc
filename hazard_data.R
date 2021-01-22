@@ -51,8 +51,8 @@ complete_data = function(dateid, pressure_delay = 9)
     d[, hosp_date := specimen_date.x + pressure_delay]
     
     # pressure: from build_sitrep_data.R
-    pressure = fread("~/Documents/uk_covid_data_sensitive/pressure.csv");
-    d = merge(d, pressure, by.x = c("hosp_date", "NHSER_code"), by.y = c("date", "nhscd"), all.x = TRUE)
+    # pressure = fread("~/Documents/uk_covid_data_sensitive/pressure.csv");
+    # d = merge(d, pressure, by.x = c("hosp_date", "NHSER_code"), by.y = c("date", "nhscd"), all.x = TRUE)
     
     d[, data_id := dateid];
     
@@ -110,7 +110,7 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
             ethnicity_final = ethnicity_final.x, res = cat,
             specimen_date = as.Date(specimen_date.x), specimen_week = floor_date(as.Date(specimen_date.x), "1 week", week_start = 1),
             death_date = as.Date(dod), admission_date = as.Date(dateadmission_NHSE),
-            mv_pressure, ni_pressure, os_pressure, ao_pressure, medstaff_abs, nursing_abs,
+            # mv_pressure, ni_pressure, os_pressure, ao_pressure, medstaff_abs, nursing_abs,
             ctORF1ab = ct(P2CH1CQ), ctN = ct(P2CH2CQ), ctS = ct(P2CH3CQ), ctControl = ct(P2CH4CQ),
             data_id)];
     
