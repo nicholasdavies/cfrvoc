@@ -16,7 +16,7 @@ theme_set(theme_cowplot(font_size = 10))
 cd = complete_data("20210122")
 
 # Assemble data set
-dataS = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, prevalence_cutoff = TRUE)
+dataS = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-11-01")
 dataS[, sgtf_label := ifelse(sgtf == 0, "Other", "SGTF")]
 dataS[, sgtf_label := factor(sgtf_label, c("SGTF", "Other"))]
 
