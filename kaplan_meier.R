@@ -262,35 +262,30 @@ ggsave("./output/kmcurves_60_nhs.png", pl, width = 15, height = 15, units = "cm"
 
 ## Group the speciment date into 3 week categories.
 start_date <- as.Date("2020-10-05")
-dataS60[between(specimen_date, start_date, start_date + 20), spec_3week := paste0(start_date, " to ", start_date + 20)]
-start_date <- start_date + 21
+dataS60[between(specimen_date, start_date, start_date + 27), spec_3week := paste0(start_date, " to ", start_date + 27)]
+start_date <- start_date + 28
 dataS60[between(specimen_date, start_date, start_date + 21), spec_3week := paste0(start_date, " to ", start_date + 20)]
 start_date <- start_date + 21
 dataS60[between(specimen_date, start_date, start_date + 20), spec_3week := paste0(start_date, " to ", start_date + 20)]
 start_date <- start_date + 21
-dataS60[between(specimen_date, start_date, start_date + 20), spec_3week := paste0(start_date, " to ", start_date + 20)]
-start_date <- start_date + 21
-dataS60[between(specimen_date, start_date, start_date + 20), spec_3week := paste0(start_date, " to ", start_date + 20)]
+dataS60[between(specimen_date, start_date, max(specimen_date)), spec_3week := paste0(start_date, " to ", max(specimen_date))]
 
+spec_dates <- sort(unique(dataS60$spec_3week))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_3week == spec_dates[1]])
+plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[1], .risk_table = NULL, .legend_position = c(0.05, 0.1))
 
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_3week == "2020-10-05 to 2020-10-25"])
-plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "2020-10-05 to 2020-10-25", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_3week == spec_dates[2]])
+plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[2], .risk_table = NULL, .legend_position = c(0.05, 0.1))
 
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_3week == "2020-10-26 to 2020-11-15"])
-plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "2020-10-26 to 2020-11-15", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_3week == spec_dates[3]])
+plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[3], .risk_table = NULL, .legend_position = c(0.05, 0.1))
 
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_3week == "2020-11-16 to 2020-12-06"])
-plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "2020-11-16 to 2020-12-06", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_3week == "2020-12-07 to 2020-12-27"])
-plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "2020-12-07 to 2020-12-27", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_3week == "2020-12-28 to 2021-01-17"])
-plE = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "2020-12-28 to 2021-01-17", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_3week == spec_dates[4]])
+plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[4], .risk_table = NULL, .legend_position = c(0.05, 0.1))
 
 dataS60[,.N, by =spec_3week][order(spec_3week)]
 
-pl = cowplot::plot_grid(plA, plB, plC, plD, plE, ncol = 2, labels = letters, label_size = 10)
+pl = cowplot::plot_grid(plA, plB, plC, plD, ncol = 2, labels = letters, label_size = 10)
 ggsave("./output/kmcurves_60_spec_week.pdf", pl, width = 15, height = 15, units = "cm", useDingbats = FALSE)
 ggsave("./output/kmcurves_60_spec_week.png", pl, width = 15, height = 15, units = "cm")
 
@@ -300,5 +295,34 @@ ggsave("./output/kmcurves_60_spec_week.png", pl, width = 15, height = 15, units 
 # By Sex ------------------------------------------------------------------
 
 
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[sex == "Female"])
+plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Female", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[sex == "Male"])
+plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Male", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+
+
+pl = cowplot::plot_grid(plA, plB, ncol = 2, labels = letters, label_size = 10)
+ggsave("./output/kmcurves_60_sex.pdf", pl, width = 10, height = 5, units = "cm", useDingbats = FALSE)
+ggsave("./output/kmcurves_60_sex.png", pl, width = 10, height = 5, units = "cm")
+
+
+# By Age ------------------------------------------------------------------
+
+
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group == "(0,35]"])
+plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.999, 1), .margin = 0.3, .title = "0-34", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group  == "(35,55]"])
+plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.996, 1), .margin = 0.3, .title = "35-54", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group == "(55,70]"])
+plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.98, 1), .margin = 0.3, .title = "55-69", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group  %in% c("(70,85]", "(85,120]")])
+plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.89, 1), .margin = 0.3, .title = "70+", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+
+
+pl = cowplot::plot_grid(plA, plB, plC, plD, ncol = 2, labels = letters, label_size = 10)
+ggsave("./output/kmcurves_60_age.pdf", pl, width = 10, height = 10, units = "cm", useDingbats = FALSE)
+ggsave("./output/kmcurves_60_age.png", pl, width = 10, height = 10, units = "cm")
 
 
