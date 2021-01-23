@@ -452,12 +452,14 @@ plot_hazard = function(marker, constant_model, linear_varying_model, ylimits)
         geom_hline(aes(yintercept = 1), linetype = "33", size = 0.25) +
         labs(x = "Days post specimen", y = "Hazard ratio (HR)", fill = "Model", colour = "Model") +
         scale_x_continuous(breaks = c(0, 7, 14, 21, 28)) +
+        scale_colour_manual(aesthetics = c("colour", "fill"), values = c("darkorchid", "#44aa88")) +
         theme(legend.position = c(0.1, 0.9)) +
         ylim(ylimits)
 }
 
 theme_set(theme_cowplot(font_size = 10))
 
+w[, .(t, exp(x.ct), exp(x.lo), exp(x.hi))]
 
 hp_sgtf1 = plot_hazard("sgtf", "SGTF + lin age + lin IMD | LTLA + spec date", "Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date", c(0, NA))
 ggsave("./output/time_varying_sgtf.pdf", hp_sgtf1, width = 15, height = 10, units = "cm", useDingbats = FALSE)
@@ -486,12 +488,64 @@ haz_summ = function(days)
 
 summaries
 
-pl = ggplot(summaries[parameter %in% c("sgtf", "p_voc") & !model_id %like% "Time.{0,2}-(SGTF|p_voc)"]) +
+pl_effects = ggplot(summaries[parameter %in% c("sgtf", "p_voc") & !model_id %like% "Time.{0,2}-(SGTF|p_voc)"]) +
     geom_pointrange(aes(y = model_id, x = HR, xmin = HR.lo95, xmax = HR.hi95), fatten = 0.1) +
     geom_vline(aes(xintercept = 1), linetype = "33", size = 0.25) +
     labs(x = "Hazard ratio", y = NULL)
-pl
+pl_effects
 ggsave("./output/summary.pdf", pl, width = 20, height = 20, units = "cm")
 
+# Exploratory data plots
+# Exploratory plots...
+plot_samples = ggplot(dataS[, .N, keyby = .(specimen_date, sgtf)]) +
+    geom_col(aes(specimen_date, N, fill = ifelse(sgtf == 1, "Failure", "Present")), position = "stack") +
+    labs(x = "Specimen date", y = "Samples", fill = "S gene")
 
-fwrite(summaries[parameter == "sgtf"], "./output/temp_output.csv")
+plot_deaths = ggplot(dataS[died == TRUE, .N, keyby = .(specimen_date, sgtf)]) +
+    geom_col(aes(specimen_date, N, fill = ifelse(sgtf == 1, "Failure", "Present")), position = "stack") +
+    labs(x = "Specimen date", y = "Deaths", fill = "S gene")
+
+plot_censoring = ggplot(dataS[!is.na(death_date), .(specimen_date, sgtf, died, raw_death_delay = as.numeric(death_date - specimen_date))]) +
+    geom_point(aes(specimen_date, raw_death_delay, shape = ifelse(sgtf == 1, "Failure", "Present"), colour = ifelse(died, "Died", "Censored")), alpha = 0.5) +
+    labs(x = "Specimen date", y = "Time to death", shape = "S gene", colour = "Status") +
+    scale_colour_manual(values = c("Died" = "#000000", "Censored" = "#aa88cc"))
+
+plot_age = ggplot(data[, .(voc = mean(p_voc)), keyby = .(date = round_date(specimen_date, "1 week"), decade = pmin(80, (age %/% 10) * 10))]) +
+    geom_line(aes(date, voc, colour = decade, group = decade)) +
+    labs(x = "Date", y = expression(mean(P[VOC])), colour = "Age") +
+    theme(legend.position = c(0.1, 0.7))
+
+plot_region = ggplot(data[, .(voc = mean(p_voc)), keyby = .(date = round_date(specimen_date, "1 week"), NHSER_name)]) +
+    geom_line(aes(date, voc, colour = NHSER_name)) +
+    labs(x = "Date", y = expression(mean(P[VOC])), colour = "NHSE region") +
+    theme(legend.position = c(0.1, 0.7))
+
+cowplot::plot_grid(plot_samples, plot_deaths, plot_censoring, labels = letters, label_size = 10, ncol = 1, align = "v", axis = "bottom")
+ggsave("./output/spim_data.png", width = 20, height = 15, units = "cm")
+cowplot::plot_grid(plot_age, plot_region, labels = letters, label_size = 10, nrow = 1, align = "h", axis = "bottom")
+ggsave("./output/spim_trends.png", width = 20, height = 7, units = "cm")
+
+
+pl_big = plot_grid(
+    plot_grid(
+        plot_grid(plAA60, plBB60, plCC60, nrow = 1, labels = letters[1:3], label_size = 10),
+        plot_grid(
+            plot_grid(plot_samples, plot_deaths, ncol = 1, labels = letters[4:5], label_size = 10, align = "v", axis = "bottom"),
+            hp_sgtf, hp_voc, nrow = 1, labels = c("", letters[6:7]), label_size = 10
+        ), ncol = 1, rel_heights = c(1.5, 1)
+    ),
+    pl_effects,
+    labels = c("", letters[8]),
+    label_size = 10,
+    nrow = 1,
+    rel_widths = c(1, 0.5)
+)
+
+ggsave("./output/big_fig.pdf", pl_big, width = 50, height = 25, units = "cm", useDingbats = FALSE)
+ggsave("./output/big_fig.png", pl_big, width = 50, height = 25, units = "cm")
+
+tbl_out = summaries[parameter %in% c("sgtf", "p_voc") & !model_id %like% "Time.{0,2}-(SGTF|p_voc)", 
+    .(`Model` = model_id, `Parameter` = parameter, `Hazard ratio` = paste0(round(HR, 2), " (", round(HR.lo95, 2), "–", round(HR.hi95, 2), ")"),
+        `P value` = ifelse(P < 0.001, "< 0.001", round(P, 3)))]
+
+fwrite(tbl_out, "./output/table_effects.csv")

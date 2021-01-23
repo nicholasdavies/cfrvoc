@@ -48,7 +48,7 @@ do_table_prevalence = function(dataS, what)
         paste0(prettyNum(tbl$sgtf, big.mark = ","), " / ", prettyNum(tbl$sgtf + tbl$other, big.mark = ","), " (", round(tbl$pct, 1), "%)")
     }
 
-    tbl_prev = dataS[, .(sgtf = sum(sgtf == 1), other = sum(sgtf == 0)), keyby = .(characteristic = get(what))][, .(characteristic, sgtf, other, pct = 100 * sgtf / (sgtf + other))]
+    tbl_prev = dataS[, .(sgtf = sum(sgtf == 1, na.rm = T), other = sum(sgtf == 0, na.rm = T)), keyby = .(characteristic = get(what))][, .(characteristic, sgtf, other, pct = 100 * sgtf / (sgtf + other))]
 
     result = data.table(
         what = c(if (what == " ") NULL else what, paste0("    ", as.character(tbl_prev[, characteristic]))),
@@ -201,6 +201,9 @@ prevalence = rbind(
     do_table_prevalence(dataS, "NHS England region"),
     do_table_prevalence(dataS, "Specimen date")
 )
+
+prevalence
+fwrite(prevalence, "./output/table_prevalence.csv")
 
 
 # All tested individuals
