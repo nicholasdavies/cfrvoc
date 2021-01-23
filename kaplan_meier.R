@@ -326,3 +326,68 @@ ggsave("./output/kmcurves_60_age.pdf", pl, width = 10, height = 10, units = "cm"
 ggsave("./output/kmcurves_60_age.png", pl, width = 10, height = 10, units = "cm")
 
 
+
+# IMD ---------------------------------------------------------------------
+
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd1"])
+plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "imd1", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd2"])
+plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "imd2", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd3"])
+plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "imd3", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd4"])
+plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "imd4", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd5"])
+plE = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "imd5", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd6"])
+plF = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "imd6", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd7"])
+plG = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "imd7", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd8"])
+plH = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "imd8", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd9"])
+plI = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "imd9", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd10"])
+plJ = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "imd10", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+
+
+pl = cowplot::plot_grid(plA, plB, plC, plD, plE, plF, plG, plH, plI, plJ, ncol = 2, labels = letters, label_size = 10)
+ggsave("./output/kmcurves_60_imd.pdf", pl, width = 20, height = 30, units = "cm", useDingbats = FALSE)
+ggsave("./output/kmcurves_60_imd.png", pl, width = 20, height = 30, units = "cm")
+
+
+
+# Place of residence ------------------------------------------------------
+
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[res_cat == "Residential"])
+plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Residential", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[res_cat == "Care/Nursing home"])
+plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.98, 1), .margin = 0.3, .title = "Care/Nursing home", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[res_cat == "Other/Unknown"])
+plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Other/Unknown", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+
+
+pl = cowplot::plot_grid(plA, plB, plC, ncol = 2, labels = letters, label_size = 10)
+ggsave("./output/kmcurves_60_res.pdf", pl, width = 15, height = 10, units = "cm", useDingbats = FALSE)
+ggsave("./output/kmcurves_60_res.png", pl, width = 15, height = 10, units = "cm")
+
+
+# Ethnicity ---------------------------------------------------------------
+
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[eth_cat == "W"])
+plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "White", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[eth_cat == "A"])
+plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Asian", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[eth_cat == "B"])
+plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Black", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[eth_cat == "O"])
+plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Other/Mixed/Unknown", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+
+
+pl = cowplot::plot_grid(plA, plB, plC, plD, ncol = 2, labels = letters, label_size = 10)
+ggsave("./output/kmcurves_60_eth.pdf", pl, width = 15, height = 10, units = "cm", useDingbats = FALSE)
+ggsave("./output/kmcurves_60_eth.png", pl, width = 15, height = 10, units = "cm")
+
