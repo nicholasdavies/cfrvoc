@@ -192,7 +192,7 @@ ggsave("./output/kmcurves4.png", pl, width = 45, height = 15, units = "cm")
 
 # 60 DAY VIEW
 # Assemble data set
-dataS60 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, prevalence_cutoff = TRUE)
+dataS60 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0,  date_min = "2020-11-01")
 dataS60[, sgtf_label := ifelse(sgtf == 0, "Other", "SGTF")]
 dataS60[, sgtf_label := factor(sgtf_label, c("SGTF", "Other"))]
 
