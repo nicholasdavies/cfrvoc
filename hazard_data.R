@@ -77,7 +77,7 @@ complete_data = function(dateid, pressure_delay = 9)
 # death_cutoff: e.g. 28 for only considering deaths within 28 days of first positive test
 # reg_cutoff: censor data at max_date - reg_cutoff
 # P_voc: if between 0.5-1.0, classify as probable voc based upon modelled prevalence estimates; if 0, don't
-model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff, P_voc, date_min = "2000-01-01", date_max = "2100-01-01", prevalence_cutoff = FALSE, sgtfv_cutoff = 0)
+model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff, P_voc, date_min = "2000-01-01", date_max = "2100-01-01", prevalence_cutoff = FALSE, sgtfv_cutoff = 0, .missing = TRUE)
 {
     ct = function(x) ifelse(x == 0, 40, x)
     
@@ -96,7 +96,6 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
     }
     
     data = d[!(FINALID %in% dupes) &
-             !is.na(get(sgtf_column)) & 
              !is.na(prefer(age.y, age.x)) & prefer(age.y, age.x) != 0 & # Seems like some age 0 individuals are miscoded unknowns. 
              !is.na(sex) & sex != "Unknown" &
              !is.na(LTLA_name) & LTLA_name != "" &
@@ -113,6 +112,11 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
             # mv_pressure, ni_pressure, os_pressure, ao_pressure, medstaff_abs, nursing_abs,
             ctORF1ab = ct(P2CH1CQ), ctN = ct(P2CH2CQ), ctS = ct(P2CH3CQ), ctControl = ct(P2CH4CQ),
             data_id)];
+    
+    if(.missing){
+        data = data[!is.na(sgtf)]
+    }
+        
     
     # Set age and IMD groups
     data[, age_group := cut(age, c(0, 35, 55, 70, 85, 120))]
@@ -141,7 +145,9 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
     
     # Restrict data based upon date and sgtfv
     data = data[specimen_date >= date_min & specimen_date <= date_max];
-    data = data[sgtfv >= sgtfv_cutoff];
+    if(.missing){
+        data = data[sgtfv >= sgtfv_cutoff];
+    }
     
     # Revalue certain factors
     data[, eth_cat := factor(revalue(ethnicity_final,
