@@ -77,7 +77,9 @@ complete_data = function(dateid, pressure_delay = 9)
 # death_cutoff: e.g. 28 for only considering deaths within 28 days of first positive test
 # reg_cutoff: censor data at max_date - reg_cutoff
 # P_voc: if between 0.5-1.0, classify as probable voc based upon modelled prevalence estimates; if 0, don't
-model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff, P_voc, date_min = "2000-01-01", date_max = "2100-01-01", prevalence_cutoff = FALSE, sgtfv_cutoff = 0, .missing = TRUE)
+# keep_missing: if TRUE, keep entries with missing sgtf information
+model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff, P_voc, 
+    date_min = "2000-01-01", date_max = "2100-01-01", prevalence_cutoff = FALSE, sgtfv_cutoff = 0, keep_missing = FALSE)
 {
     ct = function(x) ifelse(x == 0, 40, x)
     
@@ -89,19 +91,21 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
         stop("criterion must be under30CT or sgtf")
     }
     
+    # Exclusion of duplicates
     dupes = numeric();
     if (remove_duplicates) {
         dupes = d[duplicated(FINALID), FINALID]
         dupes = setdiff(unique(dupes), NA);
     }
     
-    data = d[!(FINALID %in% dupes) &
+    data = d[!(FINALID %in% dupes) & # Exclude duplicates if requested
+             !is.na(FINALID) & # Remove any deaths not linked to a Pillar 2 test
              !is.na(prefer(age.y, age.x)) & prefer(age.y, age.x) != 0 & # Seems like some age 0 individuals are miscoded unknowns. 
-             !is.na(sex) & sex != "Unknown" &
-             !is.na(LTLA_name) & LTLA_name != "" &
-             !is.na(UTLA_name) & UTLA_name != "" &
-             !is.na(NHSER_name) & NHSER_name != "" & 
-             !is.na(specimen_date.x), 
+             !is.na(sex) & sex != "Unknown" & # Exclude unknown sex
+             !is.na(LTLA_name) & LTLA_name != "" & # Exclude unknown LTLA
+             !is.na(UTLA_name) & UTLA_name != "" & # Exclude unknown UTLA
+             !is.na(NHSER_name) & NHSER_name != "" & # Exclude unknown NHS England region
+             !is.na(specimen_date.x), # Exclude any unknown specimen dates
         .(sgtf = get(sgtf_column), p_voc = get(sgtf_column) * sgtfv, sgtfv = sgtfv, 
             age = prefer(age.y, age.x), sex = sex, 
             LTLA_name = factor(LTLA_name), UTLA_name = factor(UTLA_name), NHSER_name = factor(NHSER_name), 
@@ -113,10 +117,9 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
             ctORF1ab = ct(P2CH1CQ), ctN = ct(P2CH2CQ), ctS = ct(P2CH3CQ), ctControl = ct(P2CH4CQ),
             data_id)];
     
-    if(.missing){
+    if (!keep_missing) {
         data = data[!is.na(sgtf)]
     }
-        
     
     # Set age and IMD groups
     data[, age_group := cut(age, c(0, 35, 55, 70, 85, 120))]
@@ -125,13 +128,14 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
     # Cutoff based upon LTLA prevalence of "false positives" from prior to Oct 15
     if (prevalence_cutoff)
     {
-        prior_sgtf = data[specimen_date >= "2020-09-01" & specimen_date <= "2020-10-15", .(nhs_sgtf = mean(sgtf)), by = NHSER_name]
-        baseline_ltla = data[specimen_date >= "2020-09-01" & specimen_date <= "2020-10-15", .(Ns = sum(sgtf == 1), No = sum(sgtf == 0)), by = .(NHSER_name, LTLA_name)]
+        prior_sgtf = data[specimen_date >= "2020-09-01" & specimen_date <= "2020-10-15", .(nhs_sgtf = mean(sgtf, na.rm = T)), by = NHSER_name]
+        baseline_ltla = data[specimen_date >= "2020-09-01" & specimen_date <= "2020-10-15", .(Ns = sum(sgtf == 1, na.rm = T), No = sum(sgtf == 0, na.rm = T)), by = .(NHSER_name, LTLA_name)]
         baseline_ltla = merge(baseline_ltla, prior_sgtf, by = "NHSER_name")
         baseline_ltla = baseline_ltla[, .(priorS = sum(Ns) + mean(nhs_sgtf) * 100, priorO = sum(No) + mean(1 - nhs_sgtf) * 100), by = LTLA_name]
         baseline_ltla[, baseline := priorS / (priorS + priorO)]
         
-        trace = data[, .(sgtf = mean(sgtf, na.rm = T), nspec = .N), keyby = .(LTLA_name, specimen_date)]
+        trace = data[specimen_date >= "2020-09-01", .(sgtf = mean(sgtf, na.rm = T), nspec = .N), keyby = .(LTLA_name, specimen_date)]
+        trace[is.nan(sgtf), sgtf := 0]
         trace = merge(trace, baseline_ltla, by = "LTLA_name")
         trace[, indicator := sgtf > 1 - (1 - baseline)^2]
         trace[, n_good_so_far := cumsum(indicator * nspec), by = LTLA_name]
@@ -145,7 +149,7 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
     
     # Restrict data based upon date and sgtfv
     data = data[specimen_date >= date_min & specimen_date <= date_max];
-    if(.missing){
+    if (!keep_missing) {
         data = data[sgtfv >= sgtfv_cutoff];
     }
     

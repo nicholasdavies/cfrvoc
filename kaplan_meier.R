@@ -16,7 +16,7 @@ theme_set(theme_cowplot(font_size = 10))
 cd = complete_data("20210122")
 
 # Assemble data set
-dataS = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, prevalence_cutoff = TRUE)
+dataS = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-11-01")
 dataS[, sgtf_label := ifelse(sgtf == 0, "Other", "SGTF")]
 dataS[, sgtf_label := factor(sgtf_label, c("SGTF", "Other"))]
 
@@ -192,7 +192,7 @@ ggsave("./output/kmcurves4.png", pl, width = 45, height = 15, units = "cm")
 
 # 60 DAY VIEW
 # Assemble data set
-dataS60 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, prevalence_cutoff = TRUE)
+dataS60 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, date_min = "2020-11-01")
 dataS60[, sgtf_label := ifelse(sgtf == 0, "Other", "SGTF")]
 dataS60[, sgtf_label := factor(sgtf_label, c("SGTF", "Other"))]
 
@@ -258,9 +258,9 @@ pl = cowplot::plot_grid(plA, plB, plC, plD, plE, plF, ncol = 2, labels = letters
 ggsave("./output/kmcurves_60_nhs.pdf", pl, width = 15, height = 15, units = "cm", useDingbats = FALSE)
 ggsave("./output/kmcurves_60_nhs.png", pl, width = 15, height = 15, units = "cm")
 
-# Speciment date ----------------------------------------------------------
+# Specimen date ----------------------------------------------------------
 
-## Group the speciment date into 3 week categories.
+## Group the specimen date into 3 week categories.
 start_date <- as.Date("2020-10-05")
 dataS60[between(specimen_date, start_date, start_date + 27), spec_3week := paste0(start_date, " to ", start_date + 27)]
 start_date <- start_date + 28
