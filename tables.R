@@ -328,13 +328,13 @@ fmt_pct <- function(a,b,c){
 
 
 abs_risk_tab_28 <- cfr_28[, .("Sex" = sex, "Age" = age_group,
-                              `Base CRF 28 days` = fmt_pct(cfr, cfr_lci, cfr_uci),
-                              `New CRF 28 days` = fmt_pct(abs_risk, lci, uci))
+                              `Base CFR 28 days` = fmt_pct(cfr, cfr_lci, cfr_uci),
+                              `New CFR 28 days` = fmt_pct(abs_risk, lci, uci))
                           
 ]
 abs_risk_tab_60 <- cfr_60[, .("Sex" = sex, "Age" = age_group,
-                              `Base CRF 60 days` = fmt_pct(cfr, cfr_lci, cfr_uci),
-                              `New CRF 60 days` = fmt_pct(abs_risk, lci, uci))
+                              `Base CFR 60 days` = fmt_pct(cfr, cfr_lci, cfr_uci),
+                              `New CFR 60 days` = fmt_pct(abs_risk, lci, uci))
                           
 ]
 
