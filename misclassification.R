@@ -162,18 +162,24 @@ extract_results = function(results, date_min = "2020-09-01", date_max = "2021-01
         conc = conc[rows];
         falsepos = falsepos[rows];
         
+        pred0 = matrix(0, nrow = nrow(res_data), ncol = nsamp);
         pred  = matrix(0, nrow = nrow(res_data), ncol = nsamp);
         predr = matrix(0, nrow = nrow(res_data), ncol = nsamp);
         sgtfv = matrix(0, nrow = nrow(res_data), ncol = nsamp);
+        fpr   = matrix(0, nrow = nrow(res_data), ncol = nsamp);
         
         for (j in 1:nsamp)
         {
-            pred[, j] = logistic(as.numeric(res_data$date - ymd("2020-01-01")), slope[j], intercept[j]);
-            sgtfv[, j] = pred[, j] / (pred[, j] + (1 - pred[, j]) * falsepos[j]);
-            pred[, j] = pred[, j] + (1 - pred[, j]) * falsepos[j];
+            pred0[, j] = logistic(as.numeric(res_data$date - ymd("2020-01-01")), slope[j], intercept[j]);
+            sgtfv[, j] = pred0[, j] / (pred0[, j] + (1 - pred0[, j]) * falsepos[j]);
+            pred[, j] = pred0[, j] + (1 - pred0[, j]) * falsepos[j];
             predr[, j] = rbeta(length(pred[, j]), pred[, j] * (conc[j] - 2) + 1, (1 - pred[, j]) * (conc[j] - 2) + 1);
+            fpr[, j] = rbeta(length(falsepos[j]), falsepos[j] * (conc[j] - 2) + 1, (1 - falsepos[j]) * (conc[j] - 2) + 1);
         }
         
+        res_data[, vlo := apply(pred0, 1, function(x) quantile(x, 0.025))];
+        res_data[, vmd := apply(pred0, 1, function(x) quantile(x, 0.500))];
+        res_data[, vhi := apply(pred0, 1, function(x) quantile(x, 0.975))];
         res_data[, mlo := apply(pred,  1, function(x) quantile(x, 0.025))];
         res_data[, mmd := apply(pred,  1, function(x) quantile(x, 0.500))];
         res_data[, mhi := apply(pred,  1, function(x) quantile(x, 0.975))];
@@ -181,6 +187,12 @@ extract_results = function(results, date_min = "2020-09-01", date_max = "2021-01
         res_data[, rmd := apply(predr, 1, function(x) quantile(x, 0.500))];
         res_data[, rhi := apply(predr, 1, function(x) quantile(x, 0.975))];
         res_data[, sgtfv := apply(sgtfv, 1, mean)];
+        res_data[, fplo := quantile(falsepos, 0.025)];
+        res_data[, fpmd := quantile(falsepos, 0.500)];
+        res_data[, fphi := quantile(falsepos, 0.975)];
+        res_data[, rfplo := apply(fpr, 1, function(x) quantile(x, 0.025))];
+        res_data[, rfpmd := apply(fpr, 1, function(x) quantile(x, 0.500))];
+        res_data[, rfphi := apply(fpr, 1, function(x) quantile(x, 0.975))];
         
         res_data_all = rbind(res_data_all, res_data);
     }
@@ -196,14 +208,64 @@ w2 = copy(sgtf)
 w2[, c("mean", "lower", "upper") := binom.confint(w2$sgtf, w2$sgtf + w2$other, method = "exact")[4:6]]
 w2 = w2[specimen_date >= "2020-09-01"]
 
-ggplot(w) + 
-    geom_ribbon(aes(date, ymin = rlo, ymax = rhi), fill = "darkorchid", alpha = 0.4) + 
-    geom_ribbon(data = w2, aes(specimen_date, ymin = lower, ymax = upper), alpha = 0.4) +
-    geom_line(data = w2, aes(specimen_date, mean)) +
+ww = merge(w, w2[, .(date = specimen_date, group, dmean = mean, dlo = lower, dhi = upper)], by = c("date", "group"), all = TRUE)
+
+theme_set(theme_cowplot(font_size = 10) + theme(strip.background = element_blank()))
+
+cross_dates = ww[, date[which.min(abs(vmd - fpmd))], by = group]
+cross_dates
+
+ggplot(ww) + 
+    geom_ribbon(aes(date, ymin = rfplo, ymax = rfphi, fill = "Modelled non-VOC SGTF"), alpha = 0.4) + 
+    geom_line(aes(date, y = rfpmd, colour = "Modelled non-VOC SGTF")) + 
+    geom_ribbon(aes(date, ymin = rlo, ymax = rhi, fill = "Modelled SGTF"), alpha = 0.4) + 
+    geom_line(aes(date, y = rmd, colour = "Modelled SGTF")) + 
+    geom_ribbon(aes(date, ymin = vlo, ymax = vhi, fill = "Modelled VOC"), alpha = 0.4) +
+    geom_line(aes(date, vmd, colour = "Modelled VOC")) +
+    geom_ribbon(aes(date, ymin = dlo, ymax = dhi, fill = "Observed SGTF"), alpha = 0.4) +
+    geom_line(aes(date, dmean, colour = "Observed SGTF")) +
+    geom_line(aes(date, sgtfv, colour = "P(VOC|SGTF)")) +
+    scale_colour_manual(aesthetics = c("fill", "colour"), values = c("Modelled non-VOC SGTF" = "orange", "Modelled SGTF" = "darkorchid", 
+        "Modelled VOC" = "blue", "Observed SGTF" = "black", "P(VOC|SGTF)" = "#008888")) +
+    geom_vline(data = cross_dates, aes(xintercept = V1), linetype = "33", size = 0.25) +
+    labs(x = "Specimen date", y = NULL, colour = NULL, fill = NULL) +
+    theme(legend.position = c(0.35, 0.2)) +
     facet_wrap(~group)
 
+ggsave("./output/misclassification.pdf", width = 20, height = 15, units = "cm", useDingbats = FALSE)
+ggsave("./output/misclassification.png", width = 20, height = 15, units = "cm")
 
-w
-sgtf
+# Avoid chopping off parts of the plot
+ww2 = copy(ww)
+ww2[, rlo := pmin(0.999, rlo)]
+ww2[, rmd := pmin(0.999, rmd)]
+ww2[, rhi := pmin(0.999, rhi)]
+ww2[, vlo := pmin(0.999, vlo)]
+ww2[, vmd := pmin(0.999, vmd)]
+ww2[, vhi := pmin(0.999, vhi)]
+ww2[, vlo := pmax(0.001, vlo)]
+ww2[, vhi := pmax(0.001, vhi)]
+
+ggplot(ww2) + 
+    geom_ribbon(aes(date, ymin = rfplo, ymax = rfphi, fill = "Modelled non-VOC SGTF"), alpha = 0.4) + 
+    geom_line(aes(date, y = rfpmd, colour = "Modelled non-VOC SGTF")) + 
+    geom_ribbon(aes(date, ymin = rlo, ymax = rhi, fill = "Modelled SGTF"), alpha = 0.4) + 
+    geom_line(aes(date, y = rmd, colour = "Modelled SGTF")) + 
+    geom_ribbon(aes(date, ymin = vlo, ymax = vhi, fill = "Modelled VOC"), alpha = 0.4) +
+    geom_line(aes(date, vmd, colour = "Modelled VOC")) +
+    geom_ribbon(aes(date, ymin = dlo, ymax = dhi, fill = "Observed SGTF"), alpha = 0.4) +
+    geom_line(aes(date, dmean, colour = "Observed SGTF")) +
+    geom_line(aes(date, sgtfv, colour = "P(VOC|SGTF)")) +
+    scale_colour_manual(aesthetics = c("fill", "colour"), values = c("Modelled non-VOC SGTF" = "orange", "Modelled SGTF" = "darkorchid", 
+        "Modelled VOC" = "blue", "Observed SGTF" = "black", "P(VOC|SGTF)" = "#008888")) +
+    geom_vline(data = cross_dates, aes(xintercept = V1), linetype = "33", size = 0.25) +
+    labs(x = "Specimen date", y = NULL, colour = NULL, fill = NULL) +
+    theme(legend.position = c(0.5, 0.15)) +
+    facet_wrap(~group) +
+    scale_y_continuous(trans = scales::logit_trans(), limits = c(0.001, 0.999), breaks = c(0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99))
+
+ggsave("./output/misclassification_logit.pdf", width = 20, height = 15, units = "cm", useDingbats = FALSE)
+ggsave("./output/misclassification_logit.png", width = 20, height = 15, units = "cm")
+
 
 # ggplot(w) + geom_line(aes(x = date, y = sgtfv)) + facet_wrap(~group)

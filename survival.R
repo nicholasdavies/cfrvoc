@@ -342,6 +342,13 @@ dataS2 = dataS2[specimen_week >= "2020-11-02" & specimen_week < "2021-01-11"]
 dataS2[, specimen_week_f := factor(specimen_week)]
 do_cox("Sensitivity: SGTF + lin age + lin IMD + NHSE * spec week", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + NHSER_name * specimen_week_f, dataS2, c())
 
+# 6d. Do not include recent data points
+dataSd = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 0, P_voc = 0, date_min = "2020-11-01", date_max = "2020-12-20")
+do_cox("test Sensitivity: max specimen date 20 Dec (SGTF + lin age + lin IMD | LTLA + spec date)", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataSd, c("LTLA_name", "specimen_date"))
+
+# 6e. Include asymptomatic indicator
+do_cox("Sensitivity asymptomatic: SGTF + lin age + lin IMD | LTLA + spec date", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + asymptomatic + strata(stratum), dataS, c("LTLA_name", "specimen_date"))
+
 
 ###########################
 # P_VOC SURVIVAL ANALYSES #
@@ -367,6 +374,27 @@ do_cox("p_voc + spl age + spl IMD | LTLA + spec week", Surv(time, status) ~ p_vo
 do_cox("p_voc + spl age + spl IMD | NHSE + spec date", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataP, c("NHSER_name", "specimen_date"))
 do_cox("p_voc + spl age + spl IMD | UTLA + spec date", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataP, c("UTLA_name", "specimen_date"))
 do_cox("p_voc + spl age + spl IMD | LTLA + spec date", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataP, c("LTLA_name", "specimen_date"))
+
+# 1b. POST-NOV 1 ONLY
+
+# Assemble data set to be used for p_voc-based analyses
+dataPn = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-11-01")
+
+# Linear
+do_cox("Sens 1 Nov: p_voc + lin age + lin IMD | NHSE + spec week", Surv(time, status) ~ p_voc + age + sex + imd + eth_cat + res_cat + strata(stratum), dataPn, c("NHSER_name", "specimen_week"))
+do_cox("Sens 1 Nov: p_voc + lin age + lin IMD | UTLA + spec week", Surv(time, status) ~ p_voc + age + sex + imd + eth_cat + res_cat + strata(stratum), dataPn, c("UTLA_name", "specimen_week"))
+do_cox("Sens 1 Nov: p_voc + lin age + lin IMD | LTLA + spec week", Surv(time, status) ~ p_voc + age + sex + imd + eth_cat + res_cat + strata(stratum), dataPn, c("LTLA_name", "specimen_week"))
+do_cox("Sens 1 Nov: p_voc + lin age + lin IMD | NHSE + spec date", Surv(time, status) ~ p_voc + age + sex + imd + eth_cat + res_cat + strata(stratum), dataPn, c("NHSER_name", "specimen_date"))
+do_cox("Sens 1 Nov: p_voc + lin age + lin IMD | UTLA + spec date", Surv(time, status) ~ p_voc + age + sex + imd + eth_cat + res_cat + strata(stratum), dataPn, c("UTLA_name", "specimen_date"))
+do_cox("Sens 1 Nov: p_voc + lin age + lin IMD | LTLA + spec date", Surv(time, status) ~ p_voc + age + sex + imd + eth_cat + res_cat + strata(stratum), dataPn, c("LTLA_name", "specimen_date"))
+
+# Splines
+do_cox("Sens 1 Nov: p_voc + spl age + spl IMD | NHSE + spec week", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataPn, c("NHSER_name", "specimen_week"))
+do_cox("Sens 1 Nov: p_voc + spl age + spl IMD | UTLA + spec week", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataPn, c("UTLA_name", "specimen_week"))
+do_cox("Sens 1 Nov: p_voc + spl age + spl IMD | LTLA + spec week", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataPn, c("LTLA_name", "specimen_week"))
+do_cox("Sens 1 Nov: p_voc + spl age + spl IMD | NHSE + spec date", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataPn, c("NHSER_name", "specimen_date"))
+do_cox("Sens 1 Nov: p_voc + spl age + spl IMD | UTLA + spec date", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataPn, c("UTLA_name", "specimen_date"))
+do_cox("Sens 1 Nov: p_voc + spl age + spl IMD | LTLA + spec date", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataPn, c("LTLA_name", "specimen_date"))
 
 # 2. TIME-P_VOC
 event_times = dataP[!is.na(death_date), sort(unique(as.numeric(death_date - specimen_date)))]
@@ -404,22 +432,7 @@ do_cox("Time^2-p_voc interaction term: p_voc + p_voc:tstop + lin age + lin IMD |
 # 
 # fwrite(summaries[parameter == "sgtf"], "./output/temp_output.csv")
 
-# from Ruth: 
-# It would be nice to see a plot of the hazard ratio over time, 
-# including confidence intervals. The log HR is linear with time 
-# according to your model: A+Bt. I would obtain the HR for a series 
-# of times (e.g. on a grid from 0 to 28 in increments of 1), plus 
-# the 95% CI. The 95% CI at time t is
-# 
-# (A+Bt) +/- 1.96*SE where
-# SE=Sqrt(Var(A)+t^2*var(B)+2*t*cov(A,B))
-#  
-# Var(A) is the square of the SE for A, and similar for var(B). 
-# You can get the covariance between A and B from the covariance 
-# matrix for the parameters – i.e. using the appropriate term in 
-# vcov(your model). You can also get var(A) and var(B) from the 
-# diagonal on the covariance matrix.
-
+# Hazard ratio over time
 plot_hazard = function(marker, constant_model, linear_varying_model, ylimits)
 {
     mv = load_model(linear_varying_model)
@@ -457,9 +470,9 @@ plot_hazard = function(marker, constant_model, linear_varying_model, ylimits)
         ylim(ylimits)
 }
 
-theme_set(theme_cowplot(font_size = 10))
+# haz[t == 0, .(exp(x.ct), exp(x.lo), exp(x.hi))]
 
-w[, .(t, exp(x.ct), exp(x.lo), exp(x.hi))]
+theme_set(theme_cowplot(font_size = 10))
 
 hp_sgtf1 = plot_hazard("sgtf", "SGTF + lin age + lin IMD | LTLA + spec date", "Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date", c(0, NA))
 ggsave("./output/time_varying_sgtf.pdf", hp_sgtf1, width = 15, height = 10, units = "cm", useDingbats = FALSE)

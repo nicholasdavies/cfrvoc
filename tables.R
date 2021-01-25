@@ -6,41 +6,6 @@ library(lubridate)
 source("./phe_data.R")
 source("./hazard_data.R")
 
-prep_data = function(dataS)
-{
-    dataS[, sgtf_label := ifelse(sgtf == 0, "Non-SGTF", "SGTF")]
-    dataS[, sgtf_label := factor(sgtf_label, c("SGTF", "Non-SGTF"))]
-
-    # Create more descriptive categories for table outputs
-    dataS[, `Sex` := factor(sex)]
-    dataS[, `Age` := factor(revalue(age_group,
-        c(
-            "(0,35]" = "0–34",
-            "(35,55]" = "35–54",
-            "(55,70]" = "55–69",
-            "(70,85]" = "70–84",
-            "(85,120]" = "85 and older"
-        )), levels = c("0–34", "35–54", "55–69", "70–84", "85 and older"))]
-    dataS[, `Place of residence` := factor(res_cat)]
-    dataS[, `Index of Multiple Deprivation decile` := factor(imd, levels = 1:10)]
-    dataS[, `Ethnicity` := factor(revalue(eth_cat,
-        c(
-            "W" = "White",
-            "A" = "Asian",
-            "B" = "Black",
-            "O" = "Other/Mixed/Unknown"
-        )), levels = c("White", "Asian", "Black", "Other/Mixed/Unknown"))]
-    dataS[, `NHS England region` := factor(NHSER_name)]
-    dataS[, week_ind := week(specimen_week) + (year(specimen_week) - 2020) * 52]
-    dataS[, week_ind := (week_ind %/% 2) * 2]
-    dataS[, spec_date_ind := min(specimen_week), by = week_ind]
-    dataS[, `Specimen date` := paste0(str_trim(format(spec_date_ind, "%e %b")), "–", str_trim(format(spec_date_ind + 13, "%e %b")))]
-    dataS[, `Specimen date` := factor(`Specimen date`, levels = dataS[order(week_ind), unique(`Specimen date`)])]
-    dataS[, ` ` := ""]
-    
-    return (dataS)
-}
-
 do_table_prevalence = function(dataS, what)
 {
     column = function(tbl)

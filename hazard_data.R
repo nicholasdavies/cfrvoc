@@ -115,6 +115,7 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
             death_date = as.Date(dod), admission_date = as.Date(dateadmission_NHSE),
             # mv_pressure, ni_pressure, os_pressure, ao_pressure, medstaff_abs, nursing_abs,
             ctORF1ab = ct(P2CH1CQ), ctN = ct(P2CH2CQ), ctS = ct(P2CH3CQ), ctControl = ct(P2CH4CQ),
+            asymptomatic = factor(asymptomatic_indicator),
             data_id)];
     
     if (!keep_missing) {
@@ -122,7 +123,7 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
     }
     
     # Set age and IMD groups
-    data[, age_group := cut(age, c(0, 35, 55, 70, 85, 120))]
+    data[, age_group := cut(age, c(1, 35, 55, 70, 85, 120), right = FALSE)]
     data[, imd_group := factor(paste0("imd", imd))]
     
     # Cutoff based upon LTLA prevalence of "false positives" from prior to Oct 15
@@ -217,4 +218,42 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
     data[time == 0, time := 0.5]
 
     return (data[])
+}
+
+# Add more informative data categories
+prep_data = function(data)
+{
+    data[, sgtf_label := ifelse(sgtf == 0, "Non-SGTF", "SGTF")]
+    data[, sgtf_label := factor(sgtf_label, c("SGTF", "Non-SGTF"))]
+
+    # Create more descriptive categories for table outputs
+    data[, `Sex` := factor(sex)]
+    data[, `Age` := factor(revalue(age_group,
+        c(
+            "[1,35)" = "1–34",
+            "[35,55)" = "35–54",
+            "[55,70)" = "55–69",
+            "[70,85)" = "70–84",
+            "[85,120)" = "85 and older"
+        )), levels = c("1–34", "35–54", "55–69", "70–84", "85 and older"))]
+    data[, `Place of residence` := factor(res_cat)]
+    data[, `Index of Multiple Deprivation decile` := factor(imd, levels = 1:10)]
+    data[, `Ethnicity` := factor(revalue(eth_cat,
+        c(
+            "W" = "White",
+            "A" = "Asian",
+            "B" = "Black",
+            "O" = "Other/Mixed/Unknown"
+        )), levels = c("White", "Asian", "Black", "Other/Mixed/Unknown"))]
+    data[, `NHS England region` := factor(NHSER_name)]
+    data[, spec_date_ind := as.numeric(specimen_date - ymd("2020-11-01")) %/% 14]
+    # If last 2-week period contains 7 days or fewer, combine with penultimate period
+    if (data[spec_date_ind == max(spec_date_ind), uniqueN(specimen_date) <= 7]) {
+        data[spec_date_ind == max(spec_date_ind), spec_date_ind := spec_date_ind - 1];
+    }
+    data[, `Specimen date` := paste0(str_trim(format(min(specimen_date), "%e %b")), "–", str_trim(format(max(specimen_date), "%e %b"))), by = spec_date_ind]
+    data[, `Specimen date` := factor(`Specimen date`, levels = data[order(spec_date_ind), unique(`Specimen date`)])]
+    data[, ` ` := ""]
+    
+    return (data)
 }
