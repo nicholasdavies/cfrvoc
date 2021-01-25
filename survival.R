@@ -4,6 +4,7 @@ library(KMunicate)
 library(qs)
 library(ggplot2)
 library(cowplot)
+library(survminer)
 
 source("./hazard_data.R")
 
@@ -175,12 +176,12 @@ dataS21 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, deat
 dataS28 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-11-01")
 dataS60 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, date_min = "2020-11-01")
 dataS999= model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff =999, reg_cutoff = 10, P_voc = 0, date_min = "2020-11-01")
-do_cox("Censoring: SGTF_07 + lin age + lin IMD | LTLA + spec week", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataS07, c("LTLA_name", "specimen_week"))
-do_cox("Censoring: SGTF_14 + lin age + lin IMD | LTLA + spec week", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataS14, c("LTLA_name", "specimen_week"))
-do_cox("Censoring: SGTF_21 + lin age + lin IMD | LTLA + spec week", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataS21, c("LTLA_name", "specimen_week"))
-do_cox("Censoring: SGTF_28 + lin age + lin IMD | LTLA + spec week", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataS28, c("LTLA_name", "specimen_week"))
-do_cox("Censoring: SGTF_60 + lin age + lin IMD | LTLA + spec week", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataS60, c("LTLA_name", "specimen_week"))
-do_cox("Censoring: SGTF999 + lin age + lin IMD | LTLA + spec week", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataS999,c("LTLA_name", "specimen_week"))
+do_cox("Censoring: SGTF_07 + lin age + lin IMD | LTLA + spec date", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataS07, c("LTLA_name", "specimen_date"))
+do_cox("Censoring: SGTF_14 + lin age + lin IMD | LTLA + spec date", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataS14, c("LTLA_name", "specimen_date"))
+do_cox("Censoring: SGTF_21 + lin age + lin IMD | LTLA + spec date", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataS21, c("LTLA_name", "specimen_date"))
+do_cox("Censoring: SGTF_28 + lin age + lin IMD | LTLA + spec date", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataS28, c("LTLA_name", "specimen_date"))
+do_cox("Censoring: SGTF_60 + lin age + lin IMD | LTLA + spec date", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataS60, c("LTLA_name", "specimen_date"))
+do_cox("Censoring: SGTF999 + lin age + lin IMD | LTLA + spec date", Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataS999,c("LTLA_name", "specimen_date"))
 
 # 4. NON-OVERLAPPING PERIODS
 splitS = survSplit(Surv(time, status) ~ ., data = dataS, cut = c(0, 7, 14, 21, 28), start = "tstart", end = "tstop")
@@ -509,56 +510,64 @@ pl_effects
 ggsave("./output/summary.pdf", pl, width = 20, height = 20, units = "cm")
 
 # Exploratory data plots
-# Exploratory plots...
-plot_samples = ggplot(dataS[, .N, keyby = .(specimen_date, sgtf)]) +
-    geom_col(aes(specimen_date, N, fill = ifelse(sgtf == 1, "Failure", "Present")), position = "stack") +
-    labs(x = "Specimen date", y = "Samples", fill = "S gene")
+dataS[, SGTF_label := factor(ifelse(sgtf == 1, "SGTF", "Other"), levels = c("SGTF", "Other"))]
+plot_samples = ggplot(dataS[, .N, keyby = .(specimen_date, SGTF_label)]) +
+    geom_col(aes(specimen_date, N, fill = SGTF_label), position = "stack") +
+    labs(x = "Specimen date", y = "Samples", fill = NULL) +
+    theme(legend.position = c(0.1, 0.9))
 
-plot_deaths = ggplot(dataS[died == TRUE, .N, keyby = .(specimen_date, sgtf)]) +
-    geom_col(aes(specimen_date, N, fill = ifelse(sgtf == 1, "Failure", "Present")), position = "stack") +
-    labs(x = "Specimen date", y = "Deaths", fill = "S gene")
+plot_deaths = ggplot(dataS[died == TRUE, .N, keyby = .(specimen_date, SGTF_label)]) +
+    geom_col(aes(specimen_date, N, fill = SGTF_label), position = "stack") +
+    labs(x = "Specimen date", y = "Deaths", fill = NULL) +
+    theme(legend.position = "none")
 
 plot_censoring = ggplot(dataS[!is.na(death_date), .(specimen_date, sgtf, died, raw_death_delay = as.numeric(death_date - specimen_date))]) +
     geom_point(aes(specimen_date, raw_death_delay, shape = ifelse(sgtf == 1, "Failure", "Present"), colour = ifelse(died, "Died", "Censored")), alpha = 0.5) +
     labs(x = "Specimen date", y = "Time to death", shape = "S gene", colour = "Status") +
     scale_colour_manual(values = c("Died" = "#000000", "Censored" = "#aa88cc"))
 
-plot_age = ggplot(data[, .(voc = mean(p_voc)), keyby = .(date = round_date(specimen_date, "1 week"), decade = pmin(80, (age %/% 10) * 10))]) +
-    geom_line(aes(date, voc, colour = decade, group = decade)) +
-    labs(x = "Date", y = expression(mean(P[VOC])), colour = "Age") +
-    theme(legend.position = c(0.1, 0.7))
-
-plot_region = ggplot(data[, .(voc = mean(p_voc)), keyby = .(date = round_date(specimen_date, "1 week"), NHSER_name)]) +
-    geom_line(aes(date, voc, colour = NHSER_name)) +
-    labs(x = "Date", y = expression(mean(P[VOC])), colour = "NHSE region") +
-    theme(legend.position = c(0.1, 0.7))
-
-cowplot::plot_grid(plot_samples, plot_deaths, plot_censoring, labels = letters, label_size = 10, ncol = 1, align = "v", axis = "bottom")
-ggsave("./output/spim_data.png", width = 20, height = 15, units = "cm")
-cowplot::plot_grid(plot_age, plot_region, labels = letters, label_size = 10, nrow = 1, align = "h", axis = "bottom")
-ggsave("./output/spim_trends.png", width = 20, height = 7, units = "cm")
-
-
-pl_big = plot_grid(
-    plot_grid(
-        plot_grid(plAA60, plBB60, plCC60, nrow = 1, labels = letters[1:3], label_size = 10),
-        plot_grid(
-            plot_grid(plot_samples, plot_deaths, ncol = 1, labels = letters[4:5], label_size = 10, align = "v", axis = "bottom"),
-            hp_sgtf, hp_voc, nrow = 1, labels = c("", letters[6:7]), label_size = 10
-        ), ncol = 1, rel_heights = c(1.5, 1)
-    ),
-    pl_effects,
-    labels = c("", letters[8]),
-    label_size = 10,
-    nrow = 1,
-    rel_widths = c(1, 0.5)
-)
-
-ggsave("./output/big_fig.pdf", pl_big, width = 50, height = 25, units = "cm", useDingbats = FALSE)
-ggsave("./output/big_fig.png", pl_big, width = 50, height = 25, units = "cm")
-
 tbl_out = summaries[parameter %in% c("sgtf", "p_voc") & !model_id %like% "Time.{0,2}-(SGTF|p_voc)", 
     .(`Model` = model_id, `Parameter` = parameter, `Hazard ratio` = paste0(round(HR, 2), " (", round(HR.lo95, 2), "–", round(HR.hi95, 2), ")"),
         `P value` = ifelse(P < 0.001, "< 0.001", round(P, 3)))]
 
 fwrite(tbl_out, "./output/table_effects.csv")
+
+# Test proportional hazards assumption
+cd = complete_data("20210122")
+dataS = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-11-01")
+dataS[, stratum := do.call(paste, c(.SD, sep = "|")), .SDcols = c("LTLA_name", "specimen_date")]
+dataS[, stratum := factor(stratum)]
+model = coxph(Surv(time, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), data = dataS)
+resid = residuals(model, type = "schoenfeld")
+resid_names = colnames(resid)
+resid = residuals(model, type = "scaledsch")
+times = as.numeric(rownames(resid))
+resid = as.data.table(resid)
+names(resid) = make.names(resid_names)
+resid[, time := times]
+cox.zph(model)
+
+res_plot2 = function(resid, var, varname)
+{
+    ggplot(resid) +
+        geom_jitter(aes_string(x = "time", y = var), colour = "#ff0000", alpha = 0.3, size = 0.5, width = 0.25) +
+        geom_smooth(aes_string(x = "time", y = var), method = "loess", alpha = 0.7, colour = "blue", size = 0.5, fill = "#aaaaaa") +
+        geom_hline(aes(yintercept = 0), size = 0.25) +
+        labs(x = "Time", y = paste0("Residuals for ", varname))
+}
+
+pl1 = res_plot2(resid, "sgtf", "SGTF")
+pl2 = res_plot2(resid, "age", "age")
+pl3 = res_plot2(resid, "sexMale", "sex\n(Male)")
+pl4 = res_plot2(resid, "imd", "IMD")
+pl5 = res_plot2(resid, "eth_catA", "ethnicity\n(Asian)")
+pl6 = res_plot2(resid, "eth_catB", "ethnicity\n(Black)")
+pl7 = res_plot2(resid, "eth_catO", "ethnicity\n(Other/Mixed/Unknown)")
+pl8 = res_plot2(resid, "res_catCare.Nursing.home", "residence type\n(Care/Nursing home)")
+pl9 = res_plot2(resid, "res_catOther.Unknown", "residence type\n(Other/Unknown)")
+
+
+pl = cowplot::plot_grid(pl1, pl2, pl3, pl4, pl5, pl6, pl7, pl8, pl9, labels = letters, label_size = 10, nrow = 3)
+ggsave("./output/schoenfeld.pdf", width = 20, height = 20, units = "cm", useDingbats = FALSE)
+ggsave("./output/schoenfeld.png", width = 20, height = 20, units = "cm")
+

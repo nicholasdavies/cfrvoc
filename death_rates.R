@@ -9,28 +9,44 @@ source("./hazard_data.R")
 cd = complete_data("20210122")
 
 # Assemble data set
-dataS = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0,
+dataD = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0,
     date_min = "2020-11-01", keep_missing = TRUE)
-dataS = prep_data(dataS)
+dataD = prep_data(dataD)
+
+# Compact IMD deciles
+dataD[, `IMD decile` := factor(revalue(`Index of Multiple Deprivation decile`,
+    c(
+        "1" = "1-2 (most deprived)",
+        "2" = "1-2 (most deprived)",
+        "3" = "3-4",
+        "4" = "3-4",
+        "5" = "5-6",
+        "6" = "5-6",
+        "7" = "7-8",
+        "8" = "7-8",
+        "9" = "9-10",
+        "10" = "9-10"
+    )), levels = c("1-2 (most deprived)", "3-4", "5-6", "7-8", "9-10"))]
+
 
 # Set age X
-dataS[, age_x := as.numeric(Age)]
-ages = levels(dataS$Age)
+dataD[, age_x := as.numeric(Age)]
+ages = levels(dataD$Age)
 
-dataS[, Age2 := as.character(Age)]
-dataS[age < 55, Age2 := "1–54"]
-ages2 = unique(dataS[order(age)]$Age2)
-dataS[, Age2 := factor(Age2, levels = ages2)]
-dataS[, age2_x := as.numeric(Age2)]
+dataD[, Age2 := as.character(Age)]
+dataD[age < 55, Age2 := "1–54"]
+ages2 = unique(dataD[order(age)]$Age2)
+dataD[, Age2 := factor(Age2, levels = ages2)]
+dataD[, age2_x := as.numeric(Age2)]
 
 # Plot deaths rates by age and by "what"
 death_rates = function(what, region = "")
 {
     # Deaths by age
     if (region == "") {
-        d_standard = dataS[, .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age_x)]
+        d_standard = dataD[, .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age_x)]
     } else {
-        d_standard = dataS[NHSER_name == region, .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age_x)]
+        d_standard = dataD[NHSER_name == region, .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age_x)]
     }
     d_standard[, rate_lo_bayesian := qgamma(0.025, shape = deaths, rate = days / 10000)]
     d_standard[, rate_hi_bayesian := qgamma(0.975, shape = deaths, rate = days / 10000)]
@@ -39,9 +55,9 @@ death_rates = function(what, region = "")
 
     # Deaths by "what"
     if (region == "") {
-        dc = dataS[, .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age_x, what = get(what))]
+        dc = dataD[, .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age_x, what = get(what))]
     } else {
-        dc = dataS[NHSER_name == region]
+        dc = dataD[NHSER_name == region]
         dc[, what := get(..what)]
         dc = dc[, .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age_x, what)]
     }
@@ -64,13 +80,13 @@ death_rates = function(what, region = "")
 }
 
 # Plot death rates by age, by "what_category", and by SGTF status
-death_rates_sgtf = function(what_category, region = "")
+death_rates_sgtf = function(what_category, show_shape_guide = TRUE, region = "")
 {
     # Deaths by age
     if (region == "") {
-        d_standard = dataS[!is.na(sgtf), .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age2_x)]
+        d_standard = dataD[!is.na(sgtf), .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age2_x)]
     } else {
-        d_standard = dataS[!is.na(sgtf) & NHSER_name == region, .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age2_x)]
+        d_standard = dataD[!is.na(sgtf) & NHSER_name == region, .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age2_x)]
     }
     d_standard[, rate_lo_bayesian := qgamma(0.025, shape = deaths, rate = days / 10000)]
     d_standard[, rate_hi_bayesian := qgamma(0.975, shape = deaths, rate = days / 10000)]
@@ -79,11 +95,11 @@ death_rates_sgtf = function(what_category, region = "")
 
     # Deaths by "what"
     if (region == "") {
-        dc = dataS[!is.na(sgtf)]
+        dc = dataD[!is.na(sgtf)]
         dc[, what := get(..what_category)]
         dc = dc[, .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age2_x, what, sgtf)]
     } else {
-        dc = dataS[!is.na(sgtf) & NHSER_name == region]
+        dc = dataD[!is.na(sgtf) & NHSER_name == region]
         dc[, what := get(..what_category)]
         dc = dc[, .(deaths = sum(died), days = sum(time), rate = 10000 * sum(died) / sum(time)), keyby = .(age2_x, what, sgtf)]
     }
@@ -91,7 +107,7 @@ death_rates_sgtf = function(what_category, region = "")
     dc[, rate_hi_bayesian := qgamma(0.975, shape = deaths, rate = days / 10000)]
     dc[, rate_lo_frequentist := qchisq(0.025, 2 * deaths) / (2 * days / 10000)]
     dc[, rate_hi_frequentist := qchisq(0.975, 2 * deaths + 2) / (2 * days / 10000)]
-    dc[, z_sgtf_label := ifelse(sgtf == 1, "SGTF", "Non-SGTF")]
+    dc[, z_sgtf_label := factor(ifelse(sgtf == 1, "SGTF", "Other"), levels = c("SGTF", "Other"))]
 
     ggplot() +
         geom_rect(data = d_standard, aes(xmin = age2_x - 0.5, xmax = age2_x + 0.5, 
@@ -99,12 +115,13 @@ death_rates_sgtf = function(what_category, region = "")
         geom_segment(data = d_standard, aes(x = age2_x - 0.5, xend = age2_x + 0.5, 
             y = rate, yend = rate), size = 0.25, linetype = "22") +
         geom_pointrange(data = dc, aes(x = age2_x, ymin = rate_lo_frequentist, y = rate, ymax = rate_hi_frequentist, 
-            colour = what, shape = z_sgtf_label), fatten = 4, position = position_dodge(width = 0.8)) +
+            colour = what, shape = z_sgtf_label), fatten = 3, position = position_dodge(width = 0.8)) +
         scale_x_continuous(breaks = 1:4, labels = ages2) +
         scale_y_log10(breaks = c(0.01, 0.1, 1, 10, 100), labels = c(0.01, 0.1, 1, 10, 100)) +
-        labs(x = "Age", y = "Deaths per 10,000 days of followup", colour = what_category, shape = NULL) +
+        scale_shape_manual(values = c("SGTF" = 18, "Other" = 20)) +
+        labs(x = "Age", y = "Deaths per 10,000\ndays of followup", colour = what_category, shape = NULL) +
         theme(legend.position = c(0.025, 0.975), legend.justification = c(0, 1)) + 
-        guides(colour = guide_legend(order = 1), shape = guide_legend(order = 2))
+        guides(colour = guide_legend(order = 1), shape = if (show_shape_guide) guide_legend(order = 2) else "none")
 }
 
 pla = death_rates("Sex")
@@ -116,17 +133,17 @@ plf = death_rates("Specimen date")
 
 theme_set(theme_cowplot(font_size = 10))
 pl = plot_grid(pla, plb, plc, pld, ple, plf, nrow = 3, labels = letters, label_size = 10)
-ggsave("./output/death_rates.png", width = 30, height = 34, units = "cm")
+ggsave("./output/death_rates.png", pl, width = 30, height = 34, units = "cm")
 
 
 pla = death_rates_sgtf("Sex")
-plb = death_rates_sgtf("Place of residence")
-plc = death_rates_sgtf("Ethnicity")
-pld = death_rates_sgtf("Index of Multiple Deprivation decile")
-ple = death_rates_sgtf("NHS England region")
-plf = death_rates_sgtf("Specimen date")
+plb = death_rates_sgtf("Place of residence", FALSE)
+plc = death_rates_sgtf("Ethnicity", FALSE)
+pld = death_rates_sgtf("IMD decile", FALSE)
+ple = death_rates_sgtf("NHS England region", FALSE)
+plf = death_rates_sgtf("Specimen date", FALSE)
 
 theme_set(theme_cowplot(font_size = 10))
-pl = plot_grid(pla, plb, plc, pld, ple, plf, nrow = 3, labels = letters, label_size = 10)
-ggsave("./output/death_rates_sgtf.png", width = 30, height = 34, units = "cm")
+pl_deathrates_sgtf = plot_grid(pla, plb, plc, pld, ple, plf, nrow = 3, labels = letters[6:11], label_size = 10)
+ggsave("./output/death_rates_sgtf.png", pl_deathrates_sgtf, width = 30, height = 34, units = "cm")
 

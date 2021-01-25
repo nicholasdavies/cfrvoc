@@ -1,12 +1,12 @@
 library(KMunicate)
 
-# This is just the original KMunicate function, adding .ylim, .margin, and .title arguments.
+# This is just the original KMunicate function, adding .ylim, .margin, .title and .align arguments.
 KMunicate2 = function (fit, time_scale, .risk_table = "KMunicate", .reverse = FALSE, 
     .theme = NULL, .color_scale = NULL, .fill_scale = NULL, .linetype_scale = NULL, 
     .annotate = NULL, .xlab = "Time", .ylab = ifelse(.reverse, 
         "Estimated (1 - survival)", "Estimated survival"), .alpha = 0.25, 
     .rel_heights = NULL, .ff = NULL, .risk_table_base_size = 11, 
-    .size = NULL, .legend_position = c(1, 1), .ylim = c(0, 1), .margin = 0, .title = NULL) 
+    .size = NULL, .legend_position = c(1, 1), .ylim = c(0, 1), .margin = 0, .title = NULL, .align = "hv") 
 {
     arg_checks <- checkmate::makeAssertCollection()
     checkmate::assert_class(x = fit, classes = "survfit", add = arg_checks)
@@ -148,7 +148,7 @@ KMunicate2 = function (fit, time_scale, .risk_table = "KMunicate", .reverse = FA
             .rel_heights <- c(3, rep(1, length(tds)))
         }
         KMunicate_plot <- cowplot::plot_grid(plotlist = c(list(plot), 
-            tds), align = "hv", axis = "tlbr", ncol = 1, rel_heights = .rel_heights)
+            tds), align = .align, axis = "tlbr", ncol = 1, rel_heights = .rel_heights)
     }
     else {
         KMunicate_plot <- plot

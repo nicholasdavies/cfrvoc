@@ -113,7 +113,6 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
             ethnicity_final = ethnicity_final.x, res = cat,
             specimen_date = as.Date(specimen_date.x), specimen_week = floor_date(as.Date(specimen_date.x), "1 week", week_start = 1),
             death_date = as.Date(dod), admission_date = as.Date(dateadmission_NHSE),
-            # mv_pressure, ni_pressure, os_pressure, ao_pressure, medstaff_abs, nursing_abs,
             ctORF1ab = ct(P2CH1CQ), ctN = ct(P2CH2CQ), ctS = ct(P2CH3CQ), ctControl = ct(P2CH4CQ),
             asymptomatic = factor(asymptomatic_indicator),
             data_id)];

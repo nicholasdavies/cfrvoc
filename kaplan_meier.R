@@ -198,26 +198,19 @@ dataS60[, sgtf_label := factor(sgtf_label, c("SGTF", "Other"))]
 
 # Summary view
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60)
-plAA60 = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.995, 1), .margin = 0.3, .title = "Overall", .legend_position = c(0.05, 0.1), .risk_table_base_size = 8)
-
+plAA60 = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.995, 1), .margin = 0.3, .title = "Overall", .legend_position = c(0.05, 0.1), .risk_table_base_size = 8, .rel_heights = c(1, 0.2, 0.2), .align = "v")
 plAA60_inset = KMunicate2(fit = km, time_scale = c(0, 60), .ylim = c(0, 1), .margin = 0.3, .title = "", .risk_table = NULL, .legend_position = "none",.ylab = "", .xlab = "") + scale_y_continuous(breaks = c(0,1), expand = expansion(0)) 
-
-plAA60_both <- ggdraw() + draw_plot(plAA60) + draw_plot(plAA60_inset, x = 0.7, y = .75, width = .25, height = .2)
+plAA60_both <- ggdraw() + draw_plot(plAA60) + draw_plot(plAA60_inset, x = 0.5, y = .65, width = .5, height = .35)
 
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age < 70])
-plBB60 = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.998, 1), .margin = 0.3, .title = "Under 70", .legend_position = c(0.05, 0.1), .risk_table_base_size = 8)
-
+plBB60 = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.998, 1), .margin = 0.3, .title = "Under 70", .legend_position = c(0.05, 0.1), .risk_table_base_size = 8, .rel_heights = c(1, 0.2, 0.2), .align = "v")
 plBB60_inset = KMunicate2(fit = km, time_scale = c(0, 60), .ylim = c(0, 1), .margin = 0.3, .title = "", .risk_table = NULL, .legend_position = "none",.ylab = "", .xlab = "") + scale_y_continuous(breaks = c(0,1), expand = expansion(0)) 
-
-plBB60_both <- ggdraw() + draw_plot(plBB60) + draw_plot(plBB60_inset, x = 0.7, y = .75, width = .25, height = .2)
-
+plBB60_both <- ggdraw() + draw_plot(plBB60) + draw_plot(plBB60_inset, x = 0.5, y = .65, width = .5, height = .35)
 
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age >= 70])
-plCC60 = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.92, 1), .margin = 0.3, .title = "70 or older", .legend_position = c(0.05, 0.1), .risk_table_base_size = 8)
-
+plCC60 = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.92, 1), .margin = 0.3, .title = "70 or older", .legend_position = c(0.05, 0.1), .risk_table_base_size = 8, .rel_heights = c(1, 0.2, 0.2), .align = "v")
 plCC60_inset = KMunicate2(fit = km, time_scale = c(0, 60), .ylim = c(0, 1), .margin = 0.3, .title = "", .risk_table = NULL, .legend_position = "none",.ylab = "", .xlab = "") + scale_y_continuous(breaks = c(0,1), expand = expansion(0)) 
-
-plCC60_both <- ggdraw() + draw_plot(plCC60) + draw_plot(plCC60_inset, x = 0.7, y = .75, width = .25, height = .2)
+plCC60_both <- ggdraw() + draw_plot(plCC60) + draw_plot(plCC60_inset, x = 0.5, y = .65, width = .5, height = .35)
 
 pl = cowplot::plot_grid(plAA60, plBB60, plCC60, nrow = 1, labels = letters, label_size = 10)
 ggsave("./output/kmcurves5.pdf", pl, width = 45, height = 15, units = "cm", useDingbats = FALSE)
