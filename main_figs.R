@@ -1,3 +1,4 @@
+# Fig. 1
 # Requires plots from: survival.R, kaplan_meier.R, death_rates.R.
 
 pl_fig1 = plot_grid(
@@ -16,3 +17,14 @@ pl_fig1 = plot_grid(
 
 ggsave("./output/fig1.pdf", pl_fig1, width = 50, height = 25, units = "cm", useDingbats = FALSE)
 ggsave("./output/fig1.png", pl_fig1, width = 50, height = 25, units = "cm")
+
+# Fig. 2
+# Requires plots from survival.R
+
+pl_fig2 = plot_grid(
+    plot_grid(hp_sgtf, hp_voc, ncol = 1, labels = letters[1:2], label_size = 10),
+    pl_effects, labels = c("", letters[3]), label_size = 10, nrow = 1
+)
+
+ggsave("./output/fig2.pdf", pl_fig2, width = 30, height = 25, units = "cm", useDingbats = FALSE)
+ggsave("./output/fig2.png", pl_fig2, width = 30, height = 25, units = "cm")

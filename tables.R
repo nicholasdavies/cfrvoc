@@ -145,7 +145,6 @@ do_table_deathrate = function(dataS, what, keep_missing = FALSE)
     return (result)
 }
 
-
 # Load complete data set
 cd = complete_data("20210122")
 cd[, table(sgtf, useNA = "ifany")]
@@ -169,7 +168,6 @@ prevalence = rbind(
 
 prevalence
 fwrite(prevalence, "./output/table_prevalence.csv")
-
 
 # All tested individuals
 specimens = rbind(
@@ -247,7 +245,6 @@ deathrate_28_missing = rbind(
 
 fwrite(deathrate_28, "./output/table3.csv")
 fwrite(deathrate_28_missing, "./output/table3_missing.csv")
-
 
 # With full followup
 dataS999 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 999, reg_cutoff = 10, P_voc = 0,

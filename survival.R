@@ -117,6 +117,14 @@ do_cox_interaction = function(mdl_id, marker, group, terms, data, strata_cols)
     }
 }
 
+# Do likelihood ratio test for two saved models
+lrt = function(id_base, id_nested)
+{
+    model_base = load_model(id_base);
+    model_nested = load_model(id_nested);
+    anova(model_nested, model_base);
+}
+
 
 
 
@@ -160,12 +168,22 @@ do_cox("SGTF + spl age + spl IMD | NHSE + spec date", Surv(time, status) ~ sgtf 
 do_cox("SGTF + spl age + spl IMD | UTLA + spec date", Surv(time, status) ~ sgtf + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("UTLA_name", "specimen_date"))
 do_cox("SGTF + spl age + spl IMD | LTLA + spec date", Surv(time, status) ~ sgtf + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("LTLA_name", "specimen_date"))
 
+lrt("SGTF + spl age + spl IMD | LTLA + spec date", "SGTF + lin age + lin IMD | LTLA + spec date")
+
 # 2. INTERACTION TESTS
-do_cox_interaction("age", "sgtf", "age_group", c("age_group", "sex", "imd",       "eth_cat", "res_cat"), dataS, c("NHSER_name", "specimen_week"))
-do_cox_interaction("sex", "sgtf", "sex",       c("age",       "sex", "imd",       "eth_cat", "res_cat"), dataS, c("NHSER_name", "specimen_week"))
-do_cox_interaction("imd", "sgtf", "imd_group", c("age",       "sex", "imd_group", "eth_cat", "res_cat"), dataS, c("NHSER_name", "specimen_week"))
-do_cox_interaction("eth", "sgtf", "eth_cat",   c("age",       "sex", "imd",       "eth_cat", "res_cat"), dataS, c("NHSER_name", "specimen_week"))
-do_cox_interaction("res", "sgtf", "res_cat",   c("age",       "sex", "imd",       "eth_cat", "res_cat"), dataS, c("NHSER_name", "specimen_week"))
+do_cox_interaction("age", "sgtf", "age_group", c("age_group", "sex", "imd",       "eth_cat", "res_cat"), dataS, c("LTLA_name", "specimen_date"))
+do_cox_interaction("sex", "sgtf", "sex",       c("age",       "sex", "imd",       "eth_cat", "res_cat"), dataS, c("LTLA_name", "specimen_date"))
+do_cox_interaction("imd", "sgtf", "imd_group", c("age",       "sex", "imd_group", "eth_cat", "res_cat"), dataS, c("LTLA_name", "specimen_date"))
+do_cox_interaction("eth", "sgtf", "eth_cat",   c("age",       "sex", "imd",       "eth_cat", "res_cat"), dataS, c("LTLA_name", "specimen_date"))
+do_cox_interaction("res", "sgtf", "res_cat",   c("age",       "sex", "imd",       "eth_cat", "res_cat"), dataS, c("LTLA_name", "specimen_date"))
+
+# Investigating marginally significant SGTF x residence type term
+dataR = copy(dataS)
+dataR[, table(res_cat, useNA = "ifany")]
+dataR[, sgtf_resR := ifelse(res_cat == "Residential", sgtf, 0)]
+dataR[, sgtf_resC := ifelse(res_cat == "Care/Nursing home", sgtf, 0)]
+dataR[, sgtf_resO := ifelse(res_cat == "Other/Unknown", sgtf, 0)]
+do_cox("SGTF:res_cat + lin age + lin IMD | LTLA + spec date", Surv(time, status) ~ age + sex + imd + eth_cat + sgtf_resR + sgtf_resC + sgtf_resO + res_cat + strata(stratum), dataR, c("LTLA_name", "specimen_date"))
 
 # TODO interaction tests in the model with SGTF:time interaction.
 
@@ -199,6 +217,7 @@ do_cox("Periods: SGTF + lin age + lin IMD | LTLA + spec date", Surv(tstart, tsto
 
 # 5. TIME-X INTERACTION TERM
 event_times = dataS[!is.na(death_date), sort(unique(as.numeric(death_date - specimen_date)))]
+event_times = event_times[event_times <= 28]
 dataST = survSplit(Surv(time, status) ~ ., data = dataS, cut = event_times, start = "tstart", end = "tstop")
 setDT(dataST)
 dataST[, tstop2 := tstop^2]
@@ -220,6 +239,10 @@ dataST[, ethO := ifelse(eth_cat == "O", 1, 0)]
 # do_cox("Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | UTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + sgtf:tstop + age + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("UTLA_name", "specimen_date"))
 do_cox("Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + sgtf:tstop + age + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
 
+# LRT time interaction
+do_cox("Time-SGTF interaction term (no interaction): SGTF + lin age + lin IMD | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
+lrt("Time-SGTF interaction term (no interaction): SGTF + lin age + lin IMD | LTLA + spec date", "Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date")
+
 # With quadratic term
 # do_cox("Time^2-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | NHSE + spec week", Surv(tstart, tstop, status) ~ sgtf + sgtf:tstop + sgtf:tstop2 + age + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("NHSER_name", "specimen_week"))
 # do_cox("Time^2-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | UTLA + spec week", Surv(tstart, tstop, status) ~ sgtf + sgtf:tstop + sgtf:tstop2 + age + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("UTLA_name", "specimen_week"))
@@ -227,6 +250,9 @@ do_cox("Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA
 # do_cox("Time^2-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | NHSE + spec date", Surv(tstart, tstop, status) ~ sgtf + sgtf:tstop + sgtf:tstop2 + age + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("NHSER_name", "specimen_date"))
 # do_cox("Time^2-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | UTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + sgtf:tstop + sgtf:tstop2 + age + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("UTLA_name", "specimen_date"))
 do_cox("Time^2-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + sgtf:tstop + sgtf:tstop2 + age + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
+
+# LRT time^2
+lrt("Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date", "Time^2-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date")
 
 # 5b. TIME-AGE
 
@@ -237,6 +263,10 @@ do_cox("Time^2-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LT
 # do_cox("Time-age interaction term | NHSE + spec date", Surv(tstart, tstop, status) ~ sgtf + age + age:tstop + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("NHSER_name", "specimen_date"))
 # do_cox("Time-age interaction term | UTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + age:tstop + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("UTLA_name", "specimen_date"))
 do_cox("Time-age interaction term | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + age:tstop + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
+
+# LRT time interaction
+do_cox("Time-age interaction term (no interaction) | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
+lrt("Time-age interaction term (no interaction) | LTLA + spec date", "Time-age interaction term | LTLA + spec date")
 
 # With quadratic term
 # do_cox("Time^2-age interaction term | NHSE + spec week", Surv(tstart, tstop, status) ~ sgtf + age + age:tstop + age:tstop2 + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("NHSER_name", "specimen_week"))
@@ -256,6 +286,10 @@ do_cox("Time^2-age interaction term | LTLA + spec date", Surv(tstart, tstop, sta
 # do_cox("Time-sex interaction term | UTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sexM + sexM:tstop + imd + eth_cat + res_cat + strata(stratum), dataST, c("UTLA_name", "specimen_date"))
 do_cox("Time-sex interaction term | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sexM + sexM:tstop + imd + eth_cat + res_cat + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
 
+# LRT time interaction
+do_cox("Time-sex interaction term (no interaction) | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sexM + imd + eth_cat + res_cat + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
+lrt("Time-sex interaction term (no interaction) | LTLA + spec date", "Time-sex interaction term | LTLA + spec date")
+
 # With quadratic term
 # do_cox("Time^2-sex interaction term | NHSE + spec week", Surv(tstart, tstop, status) ~ sgtf + age + sexM + sexM:tstop + sexM:tstop2 + imd + eth_cat + res_cat + strata(stratum), dataST, c("NHSER_name", "specimen_week"))
 # do_cox("Time^2-sex interaction term | UTLA + spec week", Surv(tstart, tstop, status) ~ sgtf + age + sexM + sexM:tstop + sexM:tstop2 + imd + eth_cat + res_cat + strata(stratum), dataST, c("UTLA_name", "specimen_week"))
@@ -273,6 +307,10 @@ do_cox("Time^2-sex interaction term | LTLA + spec date", Surv(tstart, tstop, sta
 # do_cox("Time-IMD interaction term | NHSE + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + imd:tstop + eth_cat + res_cat + strata(stratum), dataST, c("NHSER_name", "specimen_date"))
 # do_cox("Time-IMD interaction term | UTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + imd:tstop + eth_cat + res_cat + strata(stratum), dataST, c("UTLA_name", "specimen_date"))
 do_cox("Time-IMD interaction term | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + imd:tstop + eth_cat + res_cat + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
+
+# LRT time interaction
+do_cox("Time-IMD interaction term (no interaction) | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + eth_cat + res_cat + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
+lrt("Time-IMD interaction term (no interaction) | LTLA + spec date", "Time-IMD interaction term | LTLA + spec date")
 
 # With quadratic term
 # do_cox("Time^2-IMD interaction term | NHSE + spec week", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + imd:tstop + imd:tstop2 + eth_cat + res_cat + strata(stratum), dataST, c("NHSER_name", "specimen_week"))
@@ -292,6 +330,10 @@ do_cox("Time^2-IMD interaction term | LTLA + spec date", Surv(tstart, tstop, sta
 # do_cox("Time-ethnicity interaction term | UTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + ethA + ethA:tstop + ethB + ethB:tstop + ethO + ethO:tstop + res_cat + strata(stratum), dataST, c("UTLA_name", "specimen_date"))
 do_cox("Time-ethnicity interaction term | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + ethA + ethA:tstop + ethB + ethB:tstop + ethO + ethO:tstop + res_cat + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
 
+# LRT time interaction
+do_cox("Time-ethnicity interaction term (no interaction) | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + ethA + ethB + ethO + res_cat + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
+lrt("Time-ethnicity interaction term (no interaction) | LTLA + spec date", "Time-ethnicity interaction term | LTLA + spec date")
+
 # With quadratic term
 # do_cox("Time^2-ethnicity interaction term | NHSE + spec week", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + ethA + ethA:tstop + ethA:tstop2 + ethB + ethB:tstop + ethB:tstop2 + ethO + ethO:tstop + ethO:tstop2 + res_cat + strata(stratum), dataST, c("NHSER_name", "specimen_week"))
 # do_cox("Time^2-ethnicity interaction term | UTLA + spec week", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + ethA + ethA:tstop + ethA:tstop2 + ethB + ethB:tstop + ethB:tstop2 + ethO + ethO:tstop + ethO:tstop2 + res_cat + strata(stratum), dataST, c("UTLA_name", "specimen_week"))
@@ -309,6 +351,10 @@ do_cox("Time^2-ethnicity interaction term | LTLA + spec date", Surv(tstart, tsto
 # do_cox("Time-residence interaction term | NHSE + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + eth_cat + resC + resC:tstop + resO + resO:tstop + strata(stratum), dataST, c("NHSER_name", "specimen_date"))
 # do_cox("Time-residence interaction term | UTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + eth_cat + resC + resC:tstop + resO + resO:tstop + strata(stratum), dataST, c("UTLA_name", "specimen_date"))
 do_cox("Time-residence interaction term | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + eth_cat + resC + resC:tstop + resO + resO:tstop + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
+
+# LRT time interaction
+do_cox("Time-residence interaction term (no interaction) | LTLA + spec date", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + eth_cat + resC + resO + strata(stratum), dataST, c("LTLA_name", "specimen_date"))
+lrt("Time-residence interaction term (no interaction) | LTLA + spec date", "Time-residence interaction term | LTLA + spec date")
 
 # With quadratic term
 # do_cox("Time^2-residence interaction term | NHSE + spec week", Surv(tstart, tstop, status) ~ sgtf + age + sex + imd + eth_cat + resC + resC:tstop + resC:tstop2 + resO + resO:tstop + resO:tstop2 + strata(stratum), dataST, c("NHSER_name", "specimen_week"))
@@ -420,19 +466,7 @@ do_cox("Time-p_voc interaction term: p_voc + p_voc:tstop + lin age + lin IMD | L
 do_cox("Time^2-p_voc interaction term: p_voc + p_voc:tstop + lin age + lin IMD | LTLA + spec date", Surv(tstart, tstop, status) ~ p_voc + p_voc:tstop + p_voc:tstop2 + age + sex + imd + eth_cat + res_cat + strata(stratum), dataPT, c("LTLA_name", "specimen_date"))
 
 
-
-# # Try and get some output......
-# 
-# summaries = fread("./output/model_summary.csv")
-# pl = ggplot(summaries) +
-#     geom_pointrange(aes(x = parameter, y = HR, ymin = HR.lo95, ymax = HR.hi95), fatten = 0.1) +
-#     facet_wrap(~model_id, scales = "free", ncol = 3) +
-#     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 4))
-# ggsave("./output/summary.pdf", pl, width = 40, height = 100, units = "cm", limitsize = FALSE)
-# 
-# 
-# fwrite(summaries[parameter == "sgtf"], "./output/temp_output.csv")
-
+# PLOTS
 # Hazard ratio over time
 plot_hazard = function(marker, constant_model, linear_varying_model, ylimits)
 {
@@ -469,9 +503,13 @@ plot_hazard = function(marker, constant_model, linear_varying_model, ylimits)
         scale_colour_manual(aesthetics = c("colour", "fill"), values = c("darkorchid", "#44aa88")) +
         theme(legend.position = c(0.1, 0.9)) +
         ylim(ylimits)
+    
+    # Uncomment if want to extract time-varying hazards
+    # return (haz)
 }
 
-# haz[t == 0, .(exp(x.ct), exp(x.lo), exp(x.hi))]
+# haz = plot_hazard("sgtf", "SGTF + lin age + lin IMD | LTLA + spec date", "Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date", c(0, NA))
+# haz[t == 1, .(exp(x.ct), exp(x.lo), exp(x.hi))]
 
 theme_set(theme_cowplot(font_size = 10))
 
@@ -488,25 +526,51 @@ ggsave("./output/time_varying_compare.png", hp_compare, width = 20, height = 10,
 
 # Effects of SGTF
 
-haz_summ = function(days)
-{
-    summaries = fread("./output/model_summary.csv");
-    models = summaries[, unique(model_id)];
-    
-    effects = NULL
-    for (m in models) {
-        subset = summaries[model_id == m];
-        subset
-    }
-}
+summaries = fread("./output/model_summary.csv")
 
-summaries
+summaries = summaries[!model_id %like% "\\(no interaction\\)"]
+
+model_id_replacements = c(
+    "spec date" = "date",
+    "spec week" = "week",
+    "interaction term" = "interaction",
+    "\\^2" = "²",
+    "\\(" = "",
+    "\\)" = "",
+    "\\+ spl age \\+ spl IMD" = "(spline)",
+    "\\+ lin age \\+ lin IMD " = "",
+    "Sensitivity: SGTF \\+ NHSE \\* week" = "SGTF (adjust for NHSE × week)",
+    "^p_voc (.*)$" = "p_voc \\1 [1 Sep]",
+    "^Sens 1 Nov: (.*)$" = "\\1 [1 Nov]",
+    "^Sensitivity: Sep onwards (.*)$" = "\\1 [1 Sep]",
+    "^Sensitivity: Oct onwards (.*)$" = "\\1 [1 Oct]",
+    "^Sensitivity: Nov onwards (.*)$" = "\\1 [1 Nov]",
+    "^Sensitivity: Dec onwards (.*)$" = "\\1 [1 Dec]",
+    "^Sensitivity: Prevalence cutoff (.*)$" = "\\1 [by LTLA]",
+    "^Censoring: (SGTF|p_voc)_?0?([0-9]+) (.*)$" = "\\1 (\\2-day followup) \\3",
+    "999-day" = "-unlimited",
+    "Sensitivity: no registration cutoff (.*)" = "\\1 [1 Nov+]",
+    "^Sensitivity: max specimen date 20 Dec (.*)$" = "\\1 [1 Nov-20 Dec]",
+    "Sensitivity asymptomatic: SGTF" = "SGTF (symptom status)",
+    "^(.* interaction)" = "SGTF (\\1)"
+)
+
+for (repl in seq_along(model_id_replacements)) {
+    summaries[, model_id := str_replace_all(model_id, names(model_id_replacements)[repl], model_id_replacements[repl])]
+}
+summaries[!model_id %like% "\\[", model_id := paste0(model_id, " [1 Nov]")]
+summaries = summaries[!(model_id %like% "followup" & model_id %like% "week")]
+
 
 pl_effects = ggplot(summaries[parameter %in% c("sgtf", "p_voc") & !model_id %like% "Time.{0,2}-(SGTF|p_voc)"]) +
     geom_pointrange(aes(y = model_id, x = HR, xmin = HR.lo95, xmax = HR.hi95), fatten = 0.1) +
     geom_vline(aes(xintercept = 1), linetype = "33", size = 0.25) +
-    labs(x = "Hazard ratio", y = NULL)
+    labs(x = "Hazard ratio", y = NULL) +
+    theme(panel.background = element_rect(fill = "#f0f0f0"),
+        panel.grid.major = element_line(colour = "#ffffff", size = 0.5), 
+        plot.margin = unit(c(0.1, 0.3, 0.1, 0.1), "cm"))
 pl_effects
+
 ggsave("./output/summary.pdf", pl, width = 20, height = 20, units = "cm")
 
 # Exploratory data plots
