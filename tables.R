@@ -274,3 +274,73 @@ deathrate_full_missing = rbind(
 fwrite(deathrate_full, "./output/table4.csv")
 fwrite(deathrate_full_missing, "./output/table4_missing.csv")
 
+
+# Absolute risk -----------------------------------------------------------
+
+# 60 DAY VIEW
+# Assemble data set
+dataS = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-09-01", date_max = "2020-10-01", keep_missing = TRUE)
+dataS60 = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, date_min = "2020-09-01", date_max = "2020-10-01", keep_missing = TRUE)
+
+
+cfr_28 <- dataS[, .(.N, died = sum(died)), by = .(age_group, sex)]
+cfr_28[, y := log(1.30)]
+cfr_28[, y_se := ((log(1.30) - log(1.09))/1.96)]
+cfr_28[, cfr := died/N]
+cfr_28[, cfr_se := cfr*(1-cfr)/N]
+cfr_28[, cfr_lci := cfr - 1.96*cfr_se]
+cfr_28[, cfr_uci := cfr + 1.96*cfr_se]
+cfr_28[, x:= 1-cfr]
+cfr_28[, x_se := x*(1-x)/N]
+
+## absolute risk
+cfr_28[, abs_risk := 1 - x^exp(y)]
+cfr_28[, var_abs_risk := ((exp(y)*x^(exp(y)-1))^2)*x_se^2 + (( exp(y)* (x^(exp(y)) *log(x)))^2)*y_se^2]
+cfr_28[, var_abs_risk_se := sqrt(var_abs_risk)]
+cfr_28[, uci := abs_risk + 1.96*var_abs_risk_se]
+cfr_28[, lci := abs_risk - 1.96*var_abs_risk_se]
+
+
+# repeat for days at 60 ---------------------------------------------------
+cfr_60 <- dataS60[, .(.N, died = sum(died)), by = .(age_group, sex)]
+cfr_60[, y := log(1.27)]
+cfr_60[, y_se := ((log(1.27) - log(1.069))/1.96)]
+cfr_60[, cfr := died/N]
+cfr_60[, cfr_se := cfr*(1-cfr)/N]
+cfr_60[, cfr_lci := cfr - 1.96*cfr_se]
+cfr_60[, cfr_uci := cfr + 1.96*cfr_se]
+cfr_60[, x:= 1-cfr]
+cfr_60[, x_se := x*(1-x)/N]
+
+## absolute risk
+cfr_60[, abs_risk := 1 - x^exp(y)]
+cfr_60[, var_abs_risk := ((exp(y)*x^(exp(y)-1))^2)*x_se^2 + (( exp(y)* (x^(exp(y)) *log(x)))^2)*y_se^2]
+cfr_60[, var_abs_risk_se := sqrt(var_abs_risk)]
+cfr_60[, uci := abs_risk + 1.96*var_abs_risk_se]
+cfr_60[, lci := abs_risk - 1.96*var_abs_risk_se]
+
+
+fmt_pct <- function(a,b,c){
+    paste0(signif(round(a*100,3),3), " (", signif(round(b*100,3),3), "-", signif(round(c*100,3),3),")")}
+
+
+abs_risk_tab_28 <- cfr_28[, .("Sex" = sex, "Age" = age_group,
+                              `Base CFR 28 days` = fmt_pct(cfr, cfr_lci, cfr_uci),
+                              `New CFR 28 days` = fmt_pct(abs_risk, lci, uci))
+                          
+]
+abs_risk_tab_60 <- cfr_60[, .("Sex" = sex, "Age" = age_group,
+                              `Base CFR 60 days` = fmt_pct(cfr, cfr_lci, cfr_uci),
+                              `New CFR 60 days` = fmt_pct(abs_risk, lci, uci))
+                          
+]
+
+age_lev <- c("[1,35)", "[35,55)", "[55,70)", "[70,85)", "[85,120)")
+age_lab <- c("0-34", "35-54", "55-69", "70-84", "85+")
+
+abs_risk_tab_28[, Age := factor(Age, levels = age_lev, labels = age_lab)]
+abs_risk_tab_60[, Age := factor(Age, levels = age_lev, labels = age_lab)]
+
+
+abs_risk_tab <- merge(abs_risk_tab_28, abs_risk_tab_60, by = c("Sex", "Age"))[order(Sex, Age)]
+fwrite(abs_risk_tab, "./output/table5_abs_risk.csv")
