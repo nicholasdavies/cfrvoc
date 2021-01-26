@@ -443,6 +443,11 @@ do_cox("Sens 1 Nov: p_voc + spl age + spl IMD | NHSE + spec date", Surv(time, st
 do_cox("Sens 1 Nov: p_voc + spl age + spl IMD | UTLA + spec date", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataPn, c("UTLA_name", "specimen_date"))
 do_cox("Sens 1 Nov: p_voc + spl age + spl IMD | LTLA + spec date", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataPn, c("LTLA_name", "specimen_date"))
 
+# 1c. 60 DAY FOLLOWUP P_VOC
+dataP60 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0)
+do_cox("Censoring: p_voc_60 + lin age + lin IMD | LTLA + spec date", Surv(time, status) ~ p_voc + age + sex + imd + eth_cat + res_cat + strata(stratum), dataP60, c("LTLA_name", "specimen_date"))
+
+
 # 2. TIME-P_VOC
 event_times = dataP[!is.na(death_date), sort(unique(as.numeric(death_date - specimen_date)))]
 dataPT = survSplit(Surv(time, status) ~ ., data = dataP, cut = event_times, start = "tstart", end = "tstop")
@@ -468,7 +473,7 @@ do_cox("Time^2-p_voc interaction term: p_voc + p_voc:tstop + lin age + lin IMD |
 
 # PLOTS
 # Hazard ratio over time
-plot_hazard = function(marker, constant_model, linear_varying_model, ylimits)
+plot_hazard = function(marker, constant_model, linear_varying_model, ylimits, y_label)
 {
     mv = load_model(linear_varying_model)
     
@@ -493,12 +498,12 @@ plot_hazard = function(marker, constant_model, linear_varying_model, ylimits)
     haz[, c.lo := c.ct - 1.96 * summary(mc)$coefficients[marker, "se(coef)"]]
     
     ggplot(haz) +
-        geom_ribbon(aes(x = t, ymin = exp(c.lo), ymax = exp(c.hi), fill = "Constant HR (proportional hazards)"), alpha = 0.4) +
-        geom_ribbon(aes(x = t, ymin = exp(x.lo), ymax = exp(x.hi), fill = "Time-varying HR"), alpha = 0.4) +
-        geom_line(aes(x = t, y = exp(c.ct), colour = "Constant HR (proportional hazards)")) +
-        geom_line(aes(x = t, y = exp(x.ct), colour = "Time-varying HR")) +
+        geom_ribbon(aes(x = t, ymin = exp(c.lo), ymax = exp(c.hi), fill = "Constant hazard ratio (proportional hazards)"), alpha = 0.4) +
+        geom_ribbon(aes(x = t, ymin = exp(x.lo), ymax = exp(x.hi), fill = "Time-varying hazard ratio"), alpha = 0.4) +
+        geom_line(aes(x = t, y = exp(c.ct), colour = "Constant hazard ratio (proportional hazards)")) +
+        geom_line(aes(x = t, y = exp(x.ct), colour = "Time-varying hazard ratio")) +
         geom_hline(aes(yintercept = 1), linetype = "33", size = 0.25) +
-        labs(x = "Days post specimen", y = "Hazard ratio (HR)", fill = "Model", colour = "Model") +
+        labs(x = "Days post specimen", y = y_label, fill = "Model", colour = "Model") +
         scale_x_continuous(breaks = c(0, 7, 14, 21, 28)) +
         scale_colour_manual(aesthetics = c("colour", "fill"), values = c("darkorchid", "#44aa88")) +
         theme(legend.position = c(0.1, 0.9)) +
@@ -513,12 +518,12 @@ plot_hazard = function(marker, constant_model, linear_varying_model, ylimits)
 
 theme_set(theme_cowplot(font_size = 10))
 
-hp_sgtf1 = plot_hazard("sgtf", "SGTF + lin age + lin IMD | LTLA + spec date", "Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date", c(0, NA))
+hp_sgtf1 = plot_hazard("sgtf", "SGTF + lin age + lin IMD | LTLA + spec date", "Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date", c(0, NA), "Hazard ratio for SGTF")
 ggsave("./output/time_varying_sgtf.pdf", hp_sgtf1, width = 15, height = 10, units = "cm", useDingbats = FALSE)
 ggsave("./output/time_varying_sgtf.png", hp_sgtf1, width = 15, height = 10, units = "cm")
 
-hp_sgtf = plot_hazard("sgtf", "SGTF + lin age + lin IMD | LTLA + spec date", "Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date", c(0, 4.5))
-hp_voc = plot_hazard("p_voc", "p_voc + lin age + lin IMD | LTLA + spec date", "Time-p_voc interaction term: p_voc + p_voc:tstop + lin age + lin IMD | LTLA + spec date", c(0, 4.5))
+hp_sgtf = plot_hazard("sgtf", "SGTF + lin age + lin IMD | LTLA + spec date", "Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date", c(0, 4.5), "Hazard ratio for SGTF")
+hp_voc = plot_hazard("p_voc", "p_voc + lin age + lin IMD | LTLA + spec date", "Time-p_voc interaction term: p_voc + p_voc:tstop + lin age + lin IMD | LTLA + spec date", c(0, 4.5), expression("Hazard ratio for"~p[VOC]))
 hp_compare = plot_grid(hp_sgtf, hp_voc, nrow = 1, labels = letters, label_size = 10)
 ggsave("./output/time_varying_compare.pdf", hp_compare, width = 20, height = 10, units = "cm", useDingbats = FALSE)
 ggsave("./output/time_varying_compare.png", hp_compare, width = 20, height = 10, units = "cm")

@@ -28,3 +28,28 @@ pl_fig2 = plot_grid(
 
 ggsave("./output/fig2.pdf", pl_fig2, width = 30, height = 25, units = "cm", useDingbats = FALSE)
 ggsave("./output/fig2.png", pl_fig2, width = 30, height = 25, units = "cm")
+
+
+
+# Viral load
+
+theme_set(theme_cowplot(font_size = 10) + theme(strip.background = element_blank()))
+
+plO = ggplot(dataS[specimen_date >= "2021-01-01"]) + 
+    geom_density(aes(x = ctORF1ab, colour = factor(ifelse(sgtf == 1, "SGTF", "Other"), levels = c("SGTF", "Other")))) + 
+    facet_wrap(~NHSER_name) +
+    labs(x = "Ct ORF1ab", y = "Density", colour = NULL) +
+    theme(legend.position = c(0.4, 0.2))
+
+plN = ggplot(dataS[specimen_date >= "2021-01-01"]) + 
+    geom_density(aes(x = ctN, colour = factor(ifelse(sgtf == 1, "SGTF", "Other"), levels = c("SGTF", "Other")))) + 
+    facet_wrap(~NHSER_name) +
+    labs(x = "Ct N", y = "Density", colour = NULL) +
+    theme(legend.position = c(0.4, 0.2))
+
+plot_grid(plO, plN, nrow = 1, labels = letters, label_size = 10)
+ggsave("./output/ct.pdf", width = 25, height = 12, units = "cm", useDingbats = FALSE)
+ggsave("./output/ct.png", width = 25, height = 12, units = "cm")
+
+dataS[specimen_date >= "2021-01-01", mean(ctORF1ab), by = .(sgtf, NHSER_name)]
+dataS[specimen_date >= "2021-01-01", mean(ctN), by = .(sgtf, NHSER_name)]

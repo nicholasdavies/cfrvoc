@@ -57,7 +57,31 @@ ggplot() +
     labs(x = "Date", y = "Proportion with S-gene dropout", fill = "Source", colour = "Source")
 
 
+ggplot() +
+    geom_ribbon(data = pillar2, aes(x = specimen_date, ymin = sgtf_lo, ymax = sgtf_hi, fill = "Pillar 2"), alpha = 0.4) +
+    geom_line(data = pillar2, aes(x = specimen_date, y = sgtf_ct, colour = "Pillar 2")) +
+    geom_line(data = ons_data, aes(x = date - 3.5, y = NO / (NO + NOS), colour = "ONS CIS")) +
+    scale_colour_manual(aesthetics = c("fill", "colour"), values = c("Pillar 2" = "darkorchid", "ONS CIS" = "darkorange")) +
+    facet_wrap(~region) +
+    labs(x = "Date", y = "Proportion with S-gene dropout", fill = "Source", colour = "Source")
+
+
 cd = complete_data("20210122")
+
+# See number of people excluded due to missing covariates
+dataS[, max(specimen_date)]
+excl = cd[!is.na(sgtf) & pillar == "Pillar 2" & specimen_date.x >= "2020-11-01" & specimen_date.x <= "2021-01-11"]
+excl[, .N]
+excl[sex == "Male", .N]
+excl[sex == "Female", .N]
+excl[sex == "Unknown" | is.na(sex), .N]
+excl[is.na(prefer(age.y, age.x)), .N]
+excl[LTLA_name == "", .N]
+
+excl = cd[!is.na(sgtf) & pillar == "Pillar 2"]
+excl[, .N]
+cd[is.na(specimen_date.x) & pillar == "Pillar 2"]
+
 ct = function(x) as.numeric(ifelse(x == 0, 40, x))
 cts = cd[!is.na(specimen_date.x), .(sgtf, sgtf_under30CT, ctORF1ab = ct(P2CH1CQ), ctN = ct(P2CH2CQ), ctS = ct(P2CH3CQ), ctControl = ct(P2CH4CQ)), 
     keyby = .(specimen_date = specimen_date.x, NHSER_name, UTLA_name, LTLA_name)]
