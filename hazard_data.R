@@ -1,3 +1,5 @@
+# Refactoring to be compatible with either the complete or the reduced data set.
+
 library(data.table)
 library(readxl)
 library(lubridate)
@@ -10,28 +12,8 @@ prefer = function(a, b)
     ifelse (!is.na(a), a, b)
 }
 
-# # Look for optimal hospital pressure time: get avg time from pillar 2 test to hospital admission and to death
-# delay_admit = d[!is.na(dateadmission_NHSE) & !is.na(specimen_date.x) & !is.na(dod) & pillar == "Pillar 2", 
-#     as.numeric(as.Date(dateadmission_NHSE) - as.Date(specimen_date.x))]
-# delay_death = d[!is.na(dateadmission_NHSE) & !is.na(specimen_date.x) & !is.na(dod) & pillar == "Pillar 2", 
-#     as.numeric(as.Date(dod) - as.Date(specimen_date.x))]
-# 
-# mean(delay_admit[delay_admit >= 0])
-# median(delay_admit[delay_admit >= 0])
-# mean(delay_death[delay_death >= 0])
-# median(delay_death[delay_death >= 0])
-
-# # Get latitude and longitude by LTLA from ONS Postcode Directory (available from ONS)
-# onspd = fread("~/Downloads/ONSPD_AUG_2020_UK/Data/ONSPD_AUG_2020_UK.csv");
-# onspd = onspd[is.na(doterm), .(oslaua, lsoa11, msoa11, lat, long)]
-# onspd = onspd[lsoa11 %like% "^E"]
-# onspd = onspd[, .(lat = mean(lat), long = mean(long)), by = .(oslaua, lsoa11)]
-# onspd[, pop := ogwhat(lsoa11, "pop2019")]
-# ltla_geo = onspd[, .(lat = weighted.mean(lat, pop), long = weighted.mean(long, pop)), by = oslaua]
-# rm(onspd)
-
 # Load and assemble complete data set
-complete_data = function(dateid, pressure_delay = 9)
+complete_data = function(dateid, pressure_shift = 7)
 {
     # Note: These files contain personally identifiable information, so they are not included with the repo.
     d_death = phe_deaths(dateid)
@@ -47,21 +29,105 @@ complete_data = function(dateid, pressure_delay = 9)
     # sgtfvoc: from misclassification.R
     sgtfvoc = fread("./sgtf_voc.csv")
     d = merge(d, sgtfvoc[, .(specimen_date.x = date, NHSER_name = group, sgtfv)], by = c("specimen_date.x", "NHSER_name"), all.x = TRUE)
-
-    d[, hosp_date := specimen_date.x + pressure_delay]
     
-    # pressure: from build_sitrep_data.R
-    # pressure = fread("~/Documents/uk_covid_data_sensitive/pressure.csv");
-    # d = merge(d, pressure, by.x = c("hosp_date", "NHSER_code"), by.y = c("date", "nhscd"), all.x = TRUE)
+    # pressure: from pressure.R
+    pressure = fread("~/Documents/uk_covid_data_sensitive/pressure-2021-01-31.csv")
+    pressure[, date := date - pressure_shift];
+    d = merge(d, pressure, by.x = c("specimen_date.x", "NHSER_code"), by.y = c("date", "nhscd"), all.x = TRUE);
+
+    # pressure = fread("~/Documents/uk_covid_data_sensitive/pressure_ltla-2021-01-31.csv")
+    # pressure[, date := date - pressure_shift];
+    # d = merge(d, pressure, by.x = c("specimen_date.x", "LTLA_code"), by.y = c("date", "ltla"), all.x = FALSE);
     
     d[, data_id := dateid];
-    
-    # # geography
-    # d[, ltla_new := LTLA_code];
-    # d[ltla_new %in% c("E07000004", "E07000005", "E07000006", "E07000007"), ltla_new := "E06000060"]; # LADs amalgamated to Buckinghamshire
-    # d = merge(d, ltla_geo, by.x = "ltla_new", by.y = "oslaua", all.x = TRUE);
+    d[, age := prefer(age.y, age.x)];
     
     return (d)
+}
+
+# Make reduced data set from complete_data 
+make_reduced = function(d)
+{
+    rd = d[pillar == "Pillar 2" & !is.na(FINALID) & specimen_date.x >= "2020-09-01", .(
+        FINALID,
+        pillar,
+        age,
+        sex,
+        LTLA_name,
+        UTLA_name,
+        NHSER_name,
+        specimen_date.x,
+        sgtf,
+        sgtf_under30CT,
+        sgtfv,
+        imd_decile,
+        ethnicity_final.x,
+        cat,
+        dod,
+        P2CH1CQ,
+        P2CH2CQ,
+        P2CH3CQ,
+        P2CH4CQ,
+        asymptomatic_indicator,
+        covidcod,
+        death_type28,
+        death_type60cod,
+        mv_pressure, ni_pressure, os_pressure, ao_pressure, medstaff_abs_per_bed, nursing_abs_per_bed,
+        data_id)];
+    
+    # Seed R random number generator with cryptographically random bytes
+    set.seed(readBin(openssl::rand_bytes(n = 4), what = "integer"));
+
+    # Randomize FINALID
+    rd[, FINALID := frank(FINALID, ties.method = "dense")]
+    all_ids = rd[, unique(FINALID)];
+    all_ids = sample(all_ids, length(all_ids), replace = FALSE);
+    rd[, FINALID := all_ids[FINALID]];
+    
+    # Coarsen age
+    rd = rd[age != 0]; # remove age 0
+    rd[, age := (pmin(100, age) %/% 5) * 5 + sample(0:4, .N, replace = TRUE)];
+    
+    # Coarsen ethnicity
+    rd[, ethnicity_final.x := revalue(ethnicity_final.x,
+        c(
+            "African (Black or Black British)"     = "B",
+            "Any other Asian background"           = "A",
+            "Any other Black background"           = "B",
+            "Any other ethnic group"               = "O",
+            "Any other Mixed background"           = "O",
+            "Any other White background"           = "W",
+            "Bangladeshi (Asian or Asian British)" = "A",
+            "British (White)"                      = "W",
+            "Caribbean (Black or Black British)"   = "B",
+            "Chinese (other ethnic group)"         = "A",
+            "Indian (Asian or Asian British)"      = "A",
+            "Irish (White)"                        = "W",
+            "Pakistani (Asian or Asian British)"   = "A",
+            "Unknown"                              = "O",
+            "White and Asian (Mixed)"              = "O",
+            "White and Black African (Mixed)"      = "O",
+            "White and Black Caribbean (Mixed)"    = "O"
+        ))];
+    
+    # Coarsen residence category
+    rd[cat == "", cat := " "];
+    rd[, cat := revalue(cat,
+        c(
+            " "                                                                        = "Other/Unknown",
+            "Care/Nursing home"                                                        = "Care/Nursing home",
+            "House in multiple occupancy (HMO)"                                        = "Residential",
+            "Medical facilities (including hospitals and hospices, and mental health)" = "Other/Unknown",
+            "No fixed abode"                                                           = "Other/Unknown",
+            "Other property classifications"                                           = "Other/Unknown",
+            "Overseas address"                                                         = "Other/Unknown",
+            "Prisons, detention centres, secure units"                                 = "Other/Unknown",
+            "Residential dwelling (including houses, flats, sheltered accommodation)"  = "Residential",
+            "Residential institution (including residential education)"                = "Other/Unknown",
+            "Undetermined"                                                             = "Other/Unknown"
+        ))];
+    
+    return (rd)
 }
 
 # sgtf This is the SGTF indicator from OST, SGTF definition (SGTF=1): P2CH3CQ ==0, P2CH2CQ  <= 30, P2CH1CQ <= 30.
@@ -74,12 +140,13 @@ complete_data = function(dateid, pressure_delay = 9)
 # Build data set for modelling
 # d: data set from complete_data()
 # criterion: "under30CT" or "all" -- "under30CT" recommended
-# death_cutoff: e.g. 28 for only considering deaths within 28 days of first positive test
+# death_cutoff: e.g. 28 for only considering deaths within 28 days of first positive test; NA for no limit
 # reg_cutoff: censor data at max_date - reg_cutoff
 # P_voc: if between 0.5-1.0, classify as probable voc based upon modelled prevalence estimates; if 0, don't
 # keep_missing: if TRUE, keep entries with missing sgtf information
+# death_type: "all", "cod", "28", or "60cod"
 model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff, P_voc, 
-    date_min = "2000-01-01", date_max = "2100-01-01", prevalence_cutoff = FALSE, sgtfv_cutoff = 0, keep_missing = FALSE)
+    date_min = "2000-01-01", date_max = "2100-01-01", prevalence_cutoff = FALSE, sgtfv_cutoff = 0, keep_missing = FALSE, death_type = "all")
 {
     ct = function(x) ifelse(x == 0, 40, x)
     
@@ -99,23 +166,31 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
     }
     
     data = d[!(FINALID %in% dupes) & # Exclude duplicates if requested
-             !is.na(FINALID) & # Remove any deaths not linked to a Pillar 2 test
-             !is.na(prefer(age.y, age.x)) & prefer(age.y, age.x) != 0 & # Seems like some age 0 individuals are miscoded unknowns. 
+             !is.na(pillar) & pillar == "Pillar 2" & # Pillar 2 only
+             !is.na(FINALID) & # Remove any deaths not linked to a test
+             !is.na(age) & age != 0 & # Seems like some age 0 individuals are miscoded unknowns. 
              !is.na(sex) & sex != "Unknown" & # Exclude unknown sex
              !is.na(LTLA_name) & LTLA_name != "" & # Exclude unknown LTLA
              !is.na(UTLA_name) & UTLA_name != "" & # Exclude unknown UTLA
              !is.na(NHSER_name) & NHSER_name != "" & # Exclude unknown NHS England region
              !is.na(specimen_date.x), # Exclude any unknown specimen dates
         .(sgtf = get(sgtf_column), p_voc = get(sgtf_column) * sgtfv, sgtfv = sgtfv, 
-            age = prefer(age.y, age.x), sex = sex, 
+            age = age, sex = sex, 
             LTLA_name = factor(LTLA_name), UTLA_name = factor(UTLA_name), NHSER_name = factor(NHSER_name), 
             imd = imd_decile, 
             ethnicity_final = ethnicity_final.x, res = cat,
             specimen_date = as.Date(specimen_date.x), specimen_week = floor_date(as.Date(specimen_date.x), "1 week", week_start = 1),
-            death_date = as.Date(dod), admission_date = as.Date(dateadmission_NHSE),
+            death_date = as.Date(dod),
             ctORF1ab = ct(P2CH1CQ), ctN = ct(P2CH2CQ), ctS = ct(P2CH3CQ), ctControl = ct(P2CH4CQ),
             asymptomatic = factor(asymptomatic_indicator),
+            covidcod = ifelse(!is.na(covidcod) & covidcod == "Y", 1, 0),
+            death_type28 = ifelse(is.na(death_type28), 0, death_type28),
+            death_type60cod = ifelse(is.na(death_type60cod), 0, death_type60cod),
+            mv_pressure, ni_pressure, os_pressure, ao_pressure, medstaff_abs_per_bed, nursing_abs_per_bed,
+            ##mv_pressure, medstaff_abs_per_bed, nursing_abs_per_bed,
             data_id)];
+    
+    #warning("Only loading three pressure variables.")
     
     if (!keep_missing) {
         data = data[!is.na(sgtf)]
@@ -173,7 +248,7 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
             "White and Asian (Mixed)"              = "O",
             "White and Black African (Mixed)"      = "O",
             "White and Black Caribbean (Mixed)"    = "O"
-        )), levels = c("W", "A", "B", "O"))];
+        ), warn_missing = FALSE), levels = c("W", "A", "B", "O"))];
     data[, ethnicity_final := factor(ethnicity_final)];
     
     data[res == "", res := " "]
@@ -190,7 +265,7 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
             "Residential dwelling (including houses, flats, sheltered accommodation)"  = "Residential",
             "Residential institution (including residential education)"                = "Other/Unknown",
             "Undetermined"                                                             = "Other/Unknown"
-        )), levels = c("Residential", "Care/Nursing home", "Other/Unknown"))];
+        ), warn_missing = FALSE), levels = c("Residential", "Care/Nursing home", "Other/Unknown"))];
     data[, res := factor(res)];
     
     # Remove entries with specimen date after death date
@@ -209,7 +284,16 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
     data[, followup_date := pmin(death_date, specimen_date + death_cutoff, max_date, na.rm = T)];
     data = data[followup_date >= specimen_date];
     
-    data[, died := !is.na(death_date) & death_date <= followup_date];
+    # Death status
+    if (death_type == "all") {
+        data[, died := !is.na(death_date) & death_date <= followup_date];
+    } else if (death_type == "cod") {
+        data[, died := !is.na(death_date) & covidcod == 1 & death_date <= followup_date];
+    } else if (death_type == "28") {
+        data[, died := !is.na(death_date) & death_type28 == 1 & death_date <= followup_date];
+    } else if (death_type == "60cod") {
+        data[, died := !is.na(death_date) & death_type60cod == 1 & death_date <= followup_date];
+    }
     data[, status := ifelse(died, 1, 0)];
     data[, time := as.numeric(followup_date - specimen_date)];
     
@@ -246,6 +330,7 @@ prep_data = function(data)
         )), levels = c("White", "Asian", "Black", "Other/Mixed/Unknown"))]
     data[, `NHS England region` := factor(NHSER_name)]
     data[, spec_date_ind := as.numeric(specimen_date - ymd("2020-11-01")) %/% 14]
+    
     # If last 2-week period contains 7 days or fewer, combine with penultimate period
     if (data[spec_date_ind == max(spec_date_ind), uniqueN(specimen_date) <= 7]) {
         data[spec_date_ind == max(spec_date_ind), spec_date_ind := spec_date_ind - 1];

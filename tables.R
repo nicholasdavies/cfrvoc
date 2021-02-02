@@ -204,7 +204,7 @@ deaths = rbind(
     do_table_deaths(dataS, "Ethnicity"),
     do_table_deaths(dataS, "Index of Multiple Deprivation decile"),
     do_table_deaths(dataS, "NHS England region"),
-    do_table_specimens(dataS, "Specimen date")
+    do_table_deaths(dataS, "Specimen date")
 )
 
 deaths_missing = rbind(
@@ -215,7 +215,7 @@ deaths_missing = rbind(
     do_table_deaths(dataS, "Ethnicity", keep_missing = TRUE),
     do_table_deaths(dataS, "Index of Multiple Deprivation decile", keep_missing = TRUE),
     do_table_deaths(dataS, "NHS England region", keep_missing = TRUE),
-    do_table_specimens(dataS, "Specimen date", keep_missing = TRUE)
+    do_table_deaths(dataS, "Specimen date", keep_missing = TRUE)
 )
 
 fwrite(deaths, "./output/table2.csv")
@@ -230,7 +230,7 @@ deathrate_28 = rbind(
     do_table_deathrate(dataS, "Ethnicity"),
     do_table_deathrate(dataS, "Index of Multiple Deprivation decile"),
     do_table_deathrate(dataS, "NHS England region"),
-    do_table_specimens(dataS, "Specimen date")
+    do_table_deathrate(dataS, "Specimen date")
 )
 deathrate_28_missing = rbind(
     do_table_deathrate(dataS, " ", keep_missing = TRUE),
@@ -240,7 +240,7 @@ deathrate_28_missing = rbind(
     do_table_deathrate(dataS, "Ethnicity", keep_missing = TRUE),
     do_table_deathrate(dataS, "Index of Multiple Deprivation decile", keep_missing = TRUE),
     do_table_deathrate(dataS, "NHS England region", keep_missing = TRUE),
-    do_table_specimens(dataS, "Specimen date", keep_missing = TRUE)
+    do_table_deathrate(dataS, "Specimen date", keep_missing = TRUE)
 )
 
 fwrite(deathrate_28, "./output/table3.csv")
@@ -258,7 +258,8 @@ deathrate_full = rbind(
     do_table_deathrate(dataS999, "Place of residence"),
     do_table_deathrate(dataS999, "Ethnicity"),
     do_table_deathrate(dataS999, "Index of Multiple Deprivation decile"),
-    do_table_deathrate(dataS999, "NHS England region")
+    do_table_deathrate(dataS999, "NHS England region"),
+    do_table_deathrate(dataS999, "Specimen date")
 )
 
 deathrate_full_missing = rbind(
@@ -268,7 +269,8 @@ deathrate_full_missing = rbind(
     do_table_deathrate(dataS999, "Place of residence", keep_missing = TRUE),
     do_table_deathrate(dataS999, "Ethnicity", keep_missing = TRUE),
     do_table_deathrate(dataS999, "Index of Multiple Deprivation decile", keep_missing = TRUE),
-    do_table_deathrate(dataS999, "NHS England region", keep_missing = TRUE)
+    do_table_deathrate(dataS999, "NHS England region", keep_missing = TRUE),
+    do_table_deathrate(dataS999, "Specimen date", keep_missing = TRUE)
 )
 
 fwrite(deathrate_full, "./output/table4.csv")
@@ -283,8 +285,8 @@ fwrite(deathrate_full_missing, "./output/table4_missing.csv")
 
 # 60 DAY VIEW
 # Assemble data set
-dataS = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-09-01", date_max = "2020-10-01", keep_missing = TRUE)
-dataS60 = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, date_min = "2020-09-01", date_max = "2020-10-01", keep_missing = TRUE)
+dataS = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-08-01", date_max = "2020-10-31", keep_missing = TRUE)
+dataS60 = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, date_min = "2020-08-01", date_max = "2020-10-31", keep_missing = TRUE)
 
 
 cfr_28 <- dataS[, .(.N, died = sum(died)), by = .(age_group, sex)]
@@ -325,7 +327,7 @@ cfr_60[, lci := abs_risk - 1.96*var_abs_risk_se]
 
 
 fmt_pct <- function(a,b,c){
-    paste0(signif(round(a*100,3),3), " (", signif(round(b*100,3),3), "-", signif(round(c*100,3),3),")")}
+    paste0(signif(a*100,3), " (", signif(b*100,3), "-", signif(c*100,3),")")}
 
 
 abs_risk_tab_28 <- cfr_28[, .("Sex" = sex, "Age" = age_group,
@@ -346,8 +348,9 @@ abs_risk_tab_28[, Age := factor(Age, levels = age_lev, labels = age_lab)]
 abs_risk_tab_60[, Age := factor(Age, levels = age_lev, labels = age_lab)]
 
 
-abs_risk_tab <- merge(abs_risk_tab_28, abs_risk_tab_60, by = c("Sex", "Age"))[order(Sex, Age)]
-fwrite(abs_risk_tab, "./output/table5_abs_risk_sgtf.csv")
+abs_risk_tab1 <- merge(abs_risk_tab_28, abs_risk_tab_60, by = c("Sex", "Age"))[order(Sex, Age)]
+abs_risk_tab1
+fwrite(abs_risk_tab1, "./output/table5_abs_risk_sgtf.csv")
 
 
 #
@@ -356,8 +359,8 @@ fwrite(abs_risk_tab, "./output/table5_abs_risk_sgtf.csv")
 
 # 60 DAY VIEW
 # Assemble data set
-dataS = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-09-01", date_max = "2020-10-01", keep_missing = TRUE)
-dataS60 = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, date_min = "2020-09-01", date_max = "2020-10-01", keep_missing = TRUE)
+dataS = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-08-01", date_max = "2020-10-31", keep_missing = TRUE)
+dataS60 = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, date_min = "2020-08-01", date_max = "2020-10-31", keep_missing = TRUE)
 
  
 cfr_28 <- dataS[, .(.N, died = sum(died)), by = .(age_group, sex)]
@@ -398,7 +401,7 @@ cfr_60[, lci := abs_risk - 1.96*var_abs_risk_se]
 
 
 fmt_pct <- function(a,b,c){
-    paste0(signif(round(a*100,3),3), " (", signif(round(b*100,3),3), "-", signif(round(c*100,3),3),")")}
+    paste0(signif(a*100,3), " (", signif(b*100,3), "-", signif(c*100,3),")")}
 
 
 abs_risk_tab_28 <- cfr_28[, .("Sex" = sex, "Age" = age_group,
@@ -419,5 +422,15 @@ abs_risk_tab_28[, Age := factor(Age, levels = age_lev, labels = age_lab)]
 abs_risk_tab_60[, Age := factor(Age, levels = age_lev, labels = age_lab)]
 
 
-abs_risk_tab <- merge(abs_risk_tab_28, abs_risk_tab_60, by = c("Sex", "Age"))[order(Sex, Age)]
-fwrite(abs_risk_tab, "./output/table5_abs_risk_pvoc.csv")
+abs_risk_tab2 <- merge(abs_risk_tab_28, abs_risk_tab_60, by = c("Sex", "Age"))[order(Sex, Age)]
+fwrite(abs_risk_tab2, "./output/table5_abs_risk_pvoc.csv")
+
+
+abs_risk_tab1
+abs_risk_tab2
+
+abs_risk_tab = cbind(abs_risk_tab1[, 1:4], abs_risk_tab2[, 4], abs_risk_tab1[, 5:6], abs_risk_tab2[, 6])
+names(abs_risk_tab) = c("Sex", "Age", "Baseline, 28 days", "SGTF, 28 days", "pVOC, 28 days", "Baseline, 60 days", "SGTF, 60 days", "pVOC, 60 days")
+abs_risk_tab
+abs_risk_tab[Age == "85+", Age := "85 and older"]
+fwrite(abs_risk_tab, "./output/table5.csv")
