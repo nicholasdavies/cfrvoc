@@ -14,36 +14,36 @@ source("./hazard_data.R")
 theme_set(theme_cowplot(font_size = 10))
 
 # Load complete data set
-cd = complete_data("20210122")
+cd = complete_data("20210205")
 
 # 60 DAY VIEW
 # Assemble data set
 dataS60 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, date_min = "2020-11-01")
-dataS60[, sgtf_label := ifelse(sgtf == 0, "Other", "SGTF")]
-dataS60[, sgtf_label := factor(sgtf_label, c("SGTF", "Other"))]
+dataS60[, sgtf_label := ifelse(sgtf == 0, "Non-SGTF", "SGTF")]
+dataS60[, sgtf_label := factor(sgtf_label, c("SGTF", "Non-SGTF"))]
 
 # Summary view
+tsc = seq(0, 60, by = 10)
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60)
-plAA60 = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.995, 1), .margin = 0.3, .title = "Overall", .legend_position = c(0.05, 0.1), .risk_table_base_size = 8)
+plAA60 = KMunicate2(fit = km, time_scale = tsc, .ylim = c(0.995, 1), .margin = c(0, 0.1, 0, 0.1), .title = "Overall", .legend_position = c(0.05, 0.1), .risk_table_base_size = 9)
 
 plAA60_inset = KMunicate2(fit = km, time_scale = c(0, 60), .ylim = c(0, 1), .margin = 0.3, .title = "", .risk_table = NULL, .legend_position = "none",.ylab = "", .xlab = "") + scale_y_continuous(breaks = c(0,1), expand = expansion(0)) 
 
-plAA60_both <- ggdraw() + draw_plot(plAA60) + draw_plot(plAA60_inset, x = 0.7, y = .75, width = .25, height = .2)
+plAA60_both <- ggdraw() + draw_plot(plAA60) + draw_plot(plAA60_inset, x = .5, y = .6, width = .5, height = .4)
 
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age < 70])
-plBB60 = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.998, 1), .margin = 0.3, .title = "Under 70", .legend_position = c(0.05, 0.1), .risk_table_base_size = 8)
+plBB60 = KMunicate2(fit = km, time_scale = tsc, .ylim = c(0.9975, 1), .margin = c(0, 0.1, 0, 0.1), .title = "Under 70", .legend_position = c(0.05, 0.1), .risk_table_base_size = 9)
 
 plBB60_inset = KMunicate2(fit = km, time_scale = c(0, 60), .ylim = c(0, 1), .margin = 0.3, .title = "", .risk_table = NULL, .legend_position = "none",.ylab = "", .xlab = "") + scale_y_continuous(breaks = c(0,1), expand = expansion(0)) 
 
-plBB60_both <- ggdraw() + draw_plot(plBB60) + draw_plot(plBB60_inset, x = 0.7, y = .75, width = .25, height = .2)
-
+plBB60_both <- ggdraw() + draw_plot(plBB60) + draw_plot(plBB60_inset, x = 0.6, y = .7, width = .4, height = .3)
 
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age >= 70])
-plCC60 = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.92, 1), .margin = 0.3, .title = "70 or older", .legend_position = c(0.05, 0.1), .risk_table_base_size = 8)
+plCC60 = KMunicate2(fit = km, time_scale = tsc, .ylim = c(0.92, 1), .margin = c(0, 0.1, 0, 0.1), .title = "70 or older", .legend_position = c(0.05, 0.1), .risk_table_base_size = 9)
 
 plCC60_inset = KMunicate2(fit = km, time_scale = c(0, 60), .ylim = c(0, 1), .margin = 0.3, .title = "", .risk_table = NULL, .legend_position = "none",.ylab = "", .xlab = "") + scale_y_continuous(breaks = c(0,1), expand = expansion(0)) 
 
-plCC60_both <- ggdraw() + draw_plot(plCC60) + draw_plot(plCC60_inset, x = 0.7, y = .75, width = .25, height = .2)
+plCC60_both <- ggdraw() + draw_plot(plCC60) + draw_plot(plCC60_inset, x = 0.6, y = .7, width = .4, height = .3)
 
 pl = cowplot::plot_grid(plAA60, plBB60, plCC60, nrow = 1, labels = letters, label_size = 10)
 ggsave("./output/kmcurves_60_main.pdf", pl, width = 45, height = 15, units = "cm", useDingbats = FALSE)

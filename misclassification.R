@@ -99,7 +99,7 @@ build_model = function(data, falsepos)
 }
 
 # Load data
-sgtf = sgtf_counts("20210121", "NHSER_name")[group != ""]
+sgtf = sgtf_counts("20210205", "NHSER_name")[group != ""]
 
 # Shared slope model
 sgtf_model = build_model(sgtf, "B 1.5 15")
@@ -129,7 +129,7 @@ for (i in seq_along(groups))
 setDT(results_1)
 
 # Extraction of results
-extract_results = function(results, date_min = "2020-09-01", date_max = "2021-01-31")
+extract_results = function(results, date_min = "2020-09-01", date_max = "2021-02-28")
 {
     res_data_all = NULL;
     

@@ -6,7 +6,7 @@ source("./hazard_data.R")
 
 
 # Load complete data set
-cd = complete_data("20210122")
+cd = complete_data("20210205")
 
 # Assemble data set
 dataD = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0,
@@ -107,7 +107,12 @@ death_rates_sgtf = function(what_category, show_shape_guide = TRUE, region = "")
     dc[, rate_hi_bayesian := qgamma(0.975, shape = deaths, rate = days / 10000)]
     dc[, rate_lo_frequentist := qchisq(0.025, 2 * deaths) / (2 * days / 10000)]
     dc[, rate_hi_frequentist := qchisq(0.975, 2 * deaths + 2) / (2 * days / 10000)]
-    dc[, z_sgtf_label := factor(ifelse(sgtf == 1, "SGTF", "Other"), levels = c("SGTF", "Other"))]
+    dc[, z_sgtf_label := factor(ifelse(sgtf == 1, "SGTF", "Non-SGTF"), levels = c("SGTF", "Non-SGTF"))]
+    
+    # Count comparisons for which SGTF is higher than non-SGTF
+    higher = sum(dc[sgtf == 1, rate] > dc[sgtf == 0, rate])
+    nothigher = sum(dc[sgtf == 1, rate] <= dc[sgtf == 0, rate])
+    cat("SGTF crude death rate higher for ", higher, " / ", higher + nothigher, " comparisons.\n", sep = "")
 
     ggplot() +
         geom_rect(data = d_standard, aes(xmin = age2_x - 0.5, xmax = age2_x + 0.5, 
@@ -118,9 +123,9 @@ death_rates_sgtf = function(what_category, show_shape_guide = TRUE, region = "")
             colour = what, shape = z_sgtf_label), fatten = 3, position = position_dodge(width = 0.8)) +
         scale_x_continuous(breaks = 1:4, labels = ages2) +
         scale_y_log10(breaks = c(0.01, 0.1, 1, 10, 100), labels = c(0.01, 0.1, 1, 10, 100)) +
-        scale_shape_manual(values = c("SGTF" = 18, "Other" = 20)) +
+        scale_shape_manual(values = c("SGTF" = 4, "Non-SGTF" = 18)) +
         labs(x = "Age", y = "Deaths per 10,000\ndays of followup", colour = what_category, shape = NULL) +
-        theme(legend.position = c(0.025, 0.975), legend.justification = c(0, 1)) + 
+        theme(legend.position = c(0.025, 1.025), legend.justification = c(0, 1)) + 
         guides(colour = guide_legend(order = 1), shape = if (show_shape_guide) guide_legend(order = 2) else "none")
 }
 
@@ -144,6 +149,6 @@ ple = death_rates_sgtf("NHS England region", FALSE)
 plf = death_rates_sgtf("Specimen date", FALSE)
 
 theme_set(theme_cowplot(font_size = 10))
-pl_deathrates_sgtf = plot_grid(pla, plb, plc, pld, ple, plf, nrow = 3, labels = letters[6:11], label_size = 10)
+pl_deathrates_sgtf = plot_grid(pla, plb, plc, pld, ple, plf, nrow = 3, labels = letters[4:9], label_size = 10)
 ggsave("./output/death_rates_sgtf.png", pl_deathrates_sgtf, width = 30, height = 34, units = "cm")
 

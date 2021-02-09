@@ -299,7 +299,7 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
     
     # Add 0.5 to time = 0
     data[time == 0, time := 0.5]
-
+    
     return (data[])
 }
 

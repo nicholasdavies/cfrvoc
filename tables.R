@@ -25,6 +25,25 @@ do_table_prevalence = function(dataS, what)
     return (result)
 }
 
+do_table_missingness = function(dataS, what)
+{
+    column = function(tbl)
+    {
+        paste0(prettyNum(tbl$absent, big.mark = ","), " / ", prettyNum(tbl$absent + tbl$present, big.mark = ","), " (", round(tbl$pct, 1), "%)")
+    }
+
+    tbl_prev = dataS[, .(present = sum(!is.na(sgtf)), absent = sum(is.na(sgtf))), keyby = .(characteristic = get(what))][, .(characteristic, present, absent, pct = 100 * absent / (absent + present))]
+
+    result = data.table(
+        what = c(if (what == " ") NULL else what, paste0("    ", as.character(tbl_prev[, characteristic]))),
+        prev = c(if (what == " ") NULL else NA, column(tbl_prev))
+    )
+        
+    names(result) = c(" ", "Missingness")
+
+    return (result)
+}
+
 do_table_specimens = function(dataS, what, keep_missing = FALSE)
 {
     column = function(tbl)
@@ -146,7 +165,7 @@ do_table_deathrate = function(dataS, what, keep_missing = FALSE)
 }
 
 # Load complete data set
-cd = complete_data("20210122")
+cd = complete_data("20210205")
 cd[, table(sgtf, useNA = "ifany")]
 
 # Assemble data set. 
@@ -168,6 +187,21 @@ prevalence = rbind(
 
 prevalence
 fwrite(prevalence, "./output/table_prevalence.csv")
+
+# Missingness
+missingness_tbl = rbind(
+    do_table_missingness(dataS, " "),
+    do_table_missingness(dataS, "Sex"),
+    do_table_missingness(dataS, "Age"),
+    do_table_missingness(dataS, "Place of residence"),
+    do_table_missingness(dataS, "Ethnicity"),
+    do_table_missingness(dataS, "Index of Multiple Deprivation decile"),
+    do_table_missingness(dataS, "NHS England region"),
+    do_table_missingness(dataS, "Specimen date")
+)
+
+missingness_tbl
+fwrite(missingness_tbl, "./output/table_missingness.csv")
 
 # All tested individuals
 specimens = rbind(
@@ -192,8 +226,17 @@ specimens_missing = rbind(
     do_table_specimens(dataS, "Specimen date", keep_missing = TRUE)
 )
 
-fwrite(specimens, "./output/table1.csv")
-fwrite(specimens_missing, "./output/table1_missing.csv")
+fwrite(specimens, "./output/old_table1.csv")
+fwrite(specimens_missing, "./output/old_table1_missing.csv")
+
+table1 = cbind(
+    specimens_missing,
+    prevalence[, 2],
+    missingness_tbl[, 2]
+)
+
+fwrite(table1, "./output/table1.csv")
+
 
 # All deaths
 deaths = rbind(
@@ -218,8 +261,8 @@ deaths_missing = rbind(
     do_table_deaths(dataS, "Specimen date", keep_missing = TRUE)
 )
 
-fwrite(deaths, "./output/table2.csv")
-fwrite(deaths_missing, "./output/table2_missing.csv")
+fwrite(deaths, "./output/old_table2.csv")
+fwrite(deaths_missing, "./output/old_table2_missing.csv")
 
 # Deaths within 28 days, per day of followup
 deathrate_28 = rbind(
@@ -243,8 +286,8 @@ deathrate_28_missing = rbind(
     do_table_deathrate(dataS, "Specimen date", keep_missing = TRUE)
 )
 
-fwrite(deathrate_28, "./output/table3.csv")
-fwrite(deathrate_28_missing, "./output/table3_missing.csv")
+fwrite(deathrate_28, "./output/old_table3.csv")
+fwrite(deathrate_28_missing, "./output/table2.csv")
 
 # With full followup
 dataS999 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 999, reg_cutoff = 10, P_voc = 0,
@@ -273,25 +316,35 @@ deathrate_full_missing = rbind(
     do_table_deathrate(dataS999, "Specimen date", keep_missing = TRUE)
 )
 
-fwrite(deathrate_full, "./output/table4.csv")
-fwrite(deathrate_full_missing, "./output/table4_missing.csv")
+fwrite(deathrate_full_missing, "./output/table_S1.csv")
 
 
 # Absolute risk -----------------------------------------------------------
+
+# effects
+summaries = fread("./output/model_summary.csv")
+sgtf28_b  = summaries[model_id == "d28.SGTF.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "sgtf", coef]
+sgtf28_se = summaries[model_id == "d28.SGTF.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "sgtf", se_coef]
+sgtf60_b  = summaries[model_id == "d60.SGTF.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "sgtf", coef]
+sgtf60_se = summaries[model_id == "d60.SGTF.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "sgtf", se_coef]
+
+pvoc28_b  = summaries[model_id == "d28.pVOC.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "p_voc", coef]
+pvoc28_se = summaries[model_id == "d28.pVOC.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "p_voc", se_coef]
+pvoc60_b  = summaries[model_id == "d60.pVOC.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "p_voc", coef]
+pvoc60_se = summaries[model_id == "d60.pVOC.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "p_voc", se_coef]
 
 #
 # SGTF
 #
 
-# 60 DAY VIEW
 # Assemble data set
 dataS = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-08-01", date_max = "2020-10-31", keep_missing = TRUE)
 dataS60 = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, date_min = "2020-08-01", date_max = "2020-10-31", keep_missing = TRUE)
 
 
 cfr_28 <- dataS[, .(.N, died = sum(died)), by = .(age_group, sex)]
-cfr_28[, y := log(1.304142)]
-cfr_28[, y_se := ((log(1.304142) - log(1.092203))/1.96)]
+cfr_28[, y := sgtf28_b]
+cfr_28[, y_se := sgtf28_se]
 cfr_28[, cfr := died/N]
 cfr_28[, cfr_se := cfr*(1-cfr)/N]
 cfr_28[, cfr_lci := cfr - 1.96*cfr_se]
@@ -309,8 +362,8 @@ cfr_28[, lci := abs_risk - 1.96*var_abs_risk_se]
 
 # repeat for days at 60 ---------------------------------------------------
 cfr_60 <- dataS60[, .(.N, died = sum(died)), by = .(age_group, sex)]
-cfr_60[, y := log(1.267848)]
-cfr_60[, y_se := ((log(1.267848) - log(1.068672))/1.96)]
+cfr_60[, y := sgtf60_b]
+cfr_60[, y_se := sgtf60_se]
 cfr_60[, cfr := died/N]
 cfr_60[, cfr_se := cfr*(1-cfr)/N]
 cfr_60[, cfr_lci := cfr - 1.96*cfr_se]
@@ -357,15 +410,14 @@ fwrite(abs_risk_tab1, "./output/table5_abs_risk_sgtf.csv")
 # P_VOC
 #
 
-# 60 DAY VIEW
 # Assemble data set
 dataS = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-08-01", date_max = "2020-10-31", keep_missing = TRUE)
 dataS60 = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, date_min = "2020-08-01", date_max = "2020-10-31", keep_missing = TRUE)
 
  
 cfr_28 <- dataS[, .(.N, died = sum(died)), by = .(age_group, sex)]
-cfr_28[, y := log(1.3476328)]
-cfr_28[, y_se := ((log(1.3476328) - log(1.1120505))/1.96)]
+cfr_28[, y := pvoc28_b]
+cfr_28[, y_se := pvoc28_se]
 cfr_28[, cfr := died/N]
 cfr_28[, cfr_se := cfr*(1-cfr)/N]
 cfr_28[, cfr_lci := cfr - 1.96*cfr_se]
@@ -383,8 +435,8 @@ cfr_28[, lci := abs_risk - 1.96*var_abs_risk_se]
 
 # repeat for days at 60 ---------------------------------------------------
 cfr_60 <- dataS60[, .(.N, died = sum(died)), by = .(age_group, sex)]
-cfr_60[, y := log(1.3160)]
-cfr_60[, y_se := ((log(1.3160) - log(1.0918))/1.96)]
+cfr_60[, y := pvoc60_b]
+cfr_60[, y_se := pvoc60_se]
 cfr_60[, cfr := died/N]
 cfr_60[, cfr_se := cfr*(1-cfr)/N]
 cfr_60[, cfr_lci := cfr - 1.96*cfr_se]
