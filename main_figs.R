@@ -40,11 +40,11 @@ ggsave("./output/fig1.pdf", pl_fig1, width = 40, height = 20, units = "cm", useD
 
 pl_fig2 = plot_grid(
     plot_grid(hp_sgtf_cc, hp_voc_cc, hp_sgtf_ipw, hp_voc_ipw, ncol = 1, labels = letters[1:4], label_size = 10, align = "hv"),
-    pl_effects, labels = c("", letters[5]), label_size = 10, nrow = 1, rel_widths = c(10, 20)
+    pl_sensitivity, labels = c("", letters[5]), label_size = 10, nrow = 1, rel_widths = c(10, 20)
 )
 
 #ggsave("./output/fig2.pdf", pl_fig2, width = 30, height = 25, units = "cm", useDingbats = FALSE)
-ggsave("./output/fig2.png", pl_fig2, width = 30, height = 21, units = "cm")
+ggsave("./output/fig2.png", pl_fig2, width = 30, height = 25, units = "cm")
 
 
 
@@ -53,13 +53,13 @@ ggsave("./output/fig2.png", pl_fig2, width = 30, height = 21, units = "cm")
 theme_set(theme_cowplot(font_size = 10) + theme(strip.background = element_blank()))
 
 plO = ggplot(dataS[specimen_date >= "2021-01-01"]) + 
-    geom_density(aes(x = ctORF1ab, colour = factor(ifelse(sgtf == 1, "SGTF", "Other"), levels = c("SGTF", "Other")))) + 
+    geom_density(aes(x = ctORF1ab, colour = factor(ifelse(sgtf == 1, "SGTF", "Non-SGTF"), levels = c("SGTF", "Non-SGTF")))) + 
     facet_wrap(~NHSER_name) +
     labs(x = "Ct ORF1ab", y = "Density", colour = NULL) +
     theme(legend.position = c(0.4, 0.2))
 
 plN = ggplot(dataS[specimen_date >= "2021-01-01"]) + 
-    geom_density(aes(x = ctN, colour = factor(ifelse(sgtf == 1, "SGTF", "Other"), levels = c("SGTF", "Other")))) + 
+    geom_density(aes(x = ctN, colour = factor(ifelse(sgtf == 1, "SGTF", "Non-SGTF"), levels = c("SGTF", "Non-SGTF")))) + 
     facet_wrap(~NHSER_name) +
     labs(x = "Ct N", y = "Density", colour = NULL) +
     theme(legend.position = c(0.4, 0.2))

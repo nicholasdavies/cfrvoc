@@ -269,3 +269,27 @@ ggsave("./output/misclassification_logit.png", width = 20, height = 15, units = 
 
 
 # ggplot(w) + geom_line(aes(x = date, y = sgtfv)) + facet_wrap(~group)
+
+
+
+# For sensitivity analysis
+
+# Load data
+cog = fread("~/Documents/newcovid/data/cog_metadata_microreact_public-2021-01-11-annotated.csv")
+cog = cog[!nhs_name %in% c("Wales", "Scotland", "Northern Ireland")]
+cog = cog[, .(sgtf = sum(del_21765_6 == "del"), voc = sum(voc == TRUE)), keyby = .(sample_date, nhs_name)]
+
+w = NULL
+for (g in groups)
+{
+    dt = data.table(group = g, date = ymd("2020-09-01") + 0:180)
+    w = rbind(w, dt)
+}
+
+w = merge(w, cog, by.x = c("group", "date"), by.y = c("nhs_name", "sample_date"), all.x = TRUE)
+w[, sgtfv := voc / sgtf]
+w[, sgtfv := zoo::na.fill(sgtfv, fill = "extend"), by = group]
+w[date >= "2021-01-01", sgtfv := 1]
+ggplot(w) + geom_line(aes(x = date, y = sgtfv, colour = group))
+
+fwrite(w, "./sgtf_voc_sequencing.csv")

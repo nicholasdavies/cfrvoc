@@ -323,28 +323,21 @@ fwrite(deathrate_full_missing, "./output/table_S1.csv")
 
 # effects
 summaries = fread("./output/model_summary.csv")
-sgtf28_b  = summaries[model_id == "d28.SGTF.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "sgtf", coef]
-sgtf28_se = summaries[model_id == "d28.SGTF.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "sgtf", se_coef]
-sgtf60_b  = summaries[model_id == "d60.SGTF.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "sgtf", coef]
-sgtf60_se = summaries[model_id == "d60.SGTF.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "sgtf", se_coef]
-
-pvoc28_b  = summaries[model_id == "d28.pVOC.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "p_voc", coef]
-pvoc28_se = summaries[model_id == "d28.pVOC.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "p_voc", se_coef]
-pvoc60_b  = summaries[model_id == "d60.pVOC.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "p_voc", coef]
-pvoc60_se = summaries[model_id == "d60.pVOC.ss.2020-11-01..r10.LTLA:date..cc" & parameter == "p_voc", se_coef]
+cc28_b   = summaries[model_id == "d28.SGTF.ss.2020-11-01..r10.LTLA:date..cc"  & parameter == "sgtf", coef]
+cc28_se  = summaries[model_id == "d28.SGTF.ss.2020-11-01..r10.LTLA:date..cc"  & parameter == "sgtf", se_coef]
+ipw28_b  = summaries[model_id == "d28.SGTF.ss.2020-11-01..r10.LTLA:date..ipw" & parameter == "sgtf", coef]
+ipw28_se = summaries[model_id == "d28.SGTF.ss.2020-11-01..r10.LTLA:date..ipw" & parameter == "sgtf", se_coef]
 
 #
-# SGTF
+# CC
 #
 
 # Assemble data set
 dataS = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-08-01", date_max = "2020-10-31", keep_missing = TRUE)
-dataS60 = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, date_min = "2020-08-01", date_max = "2020-10-31", keep_missing = TRUE)
-
 
 cfr_28 <- dataS[, .(.N, died = sum(died)), by = .(age_group, sex)]
-cfr_28[, y := sgtf28_b]
-cfr_28[, y_se := sgtf28_se]
+cfr_28[, y := cc28_b]
+cfr_28[, y_se := cc28_se]
 cfr_28[, cfr := died/N]
 cfr_28[, cfr_se := cfr*(1-cfr)/N]
 cfr_28[, cfr_lci := cfr - 1.96*cfr_se]
@@ -360,64 +353,32 @@ cfr_28[, uci := abs_risk + 1.96*var_abs_risk_se]
 cfr_28[, lci := abs_risk - 1.96*var_abs_risk_se]
 
 
-# repeat for days at 60 ---------------------------------------------------
-cfr_60 <- dataS60[, .(.N, died = sum(died)), by = .(age_group, sex)]
-cfr_60[, y := sgtf60_b]
-cfr_60[, y_se := sgtf60_se]
-cfr_60[, cfr := died/N]
-cfr_60[, cfr_se := cfr*(1-cfr)/N]
-cfr_60[, cfr_lci := cfr - 1.96*cfr_se]
-cfr_60[, cfr_uci := cfr + 1.96*cfr_se]
-cfr_60[, x:= 1-cfr]
-cfr_60[, x_se := x*(1-x)/N]
-
-## absolute risk
-cfr_60[, abs_risk := 1 - x^exp(y)]
-cfr_60[, var_abs_risk := ((exp(y)*x^(exp(y)-1))^2)*x_se^2 + (( exp(y)* (x^(exp(y)) *log(x)))^2)*y_se^2]
-cfr_60[, var_abs_risk_se := sqrt(var_abs_risk)]
-cfr_60[, uci := abs_risk + 1.96*var_abs_risk_se]
-cfr_60[, lci := abs_risk - 1.96*var_abs_risk_se]
-
-
 fmt_pct <- function(a,b,c){
-    paste0(signif(a*100,3), " (", signif(b*100,3), "-", signif(c*100,3),")")}
+    paste0(signif(a*100,2), "% (", signif(b*100,2), "–", signif(c*100,2),"%)")
+}
 
-
-abs_risk_tab_28 <- cfr_28[, .("Sex" = sex, "Age" = age_group,
-                              `Base CFR 28 days` = fmt_pct(cfr, cfr_lci, cfr_uci),
-                              `New CFR 28 days` = fmt_pct(abs_risk, lci, uci))
-                          
-]
-abs_risk_tab_60 <- cfr_60[, .("Sex" = sex, "Age" = age_group,
-                              `Base CFR 60 days` = fmt_pct(cfr, cfr_lci, cfr_uci),
-                              `New CFR 60 days` = fmt_pct(abs_risk, lci, uci))
-                          
+abs_risk_tab_28 <- cfr_28[, 
+    .("Sex" = sex, "Age" = age_group,
+      `Baseline CFR` = fmt_pct(cfr, cfr_lci, cfr_uci),
+      `Variant CFR`  = fmt_pct(abs_risk, lci, uci))
 ]
 
 age_lev <- c("[1,35)", "[35,55)", "[55,70)", "[70,85)", "[85,120)")
 age_lab <- c("0-34", "35-54", "55-69", "70-84", "85+")
 
 abs_risk_tab_28[, Age := factor(Age, levels = age_lev, labels = age_lab)]
-abs_risk_tab_60[, Age := factor(Age, levels = age_lev, labels = age_lab)]
 
-
-abs_risk_tab1 <- merge(abs_risk_tab_28, abs_risk_tab_60, by = c("Sex", "Age"))[order(Sex, Age)]
+abs_risk_tab1 <- abs_risk_tab_28
 abs_risk_tab1
-fwrite(abs_risk_tab1, "./output/table5_abs_risk_sgtf.csv")
 
 
 #
-# P_VOC
+# IPW
 #
 
-# Assemble data set
-dataS = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-08-01", date_max = "2020-10-31", keep_missing = TRUE)
-dataS60 = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 60, reg_cutoff = 10, P_voc = 0, date_min = "2020-08-01", date_max = "2020-10-31", keep_missing = TRUE)
-
- 
 cfr_28 <- dataS[, .(.N, died = sum(died)), by = .(age_group, sex)]
-cfr_28[, y := pvoc28_b]
-cfr_28[, y_se := pvoc28_se]
+cfr_28[, y := ipw28_b]
+cfr_28[, y_se := ipw28_se]
 cfr_28[, cfr := died/N]
 cfr_28[, cfr_se := cfr*(1-cfr)/N]
 cfr_28[, cfr_lci := cfr - 1.96*cfr_se]
@@ -433,56 +394,28 @@ cfr_28[, uci := abs_risk + 1.96*var_abs_risk_se]
 cfr_28[, lci := abs_risk - 1.96*var_abs_risk_se]
 
 
-# repeat for days at 60 ---------------------------------------------------
-cfr_60 <- dataS60[, .(.N, died = sum(died)), by = .(age_group, sex)]
-cfr_60[, y := pvoc60_b]
-cfr_60[, y_se := pvoc60_se]
-cfr_60[, cfr := died/N]
-cfr_60[, cfr_se := cfr*(1-cfr)/N]
-cfr_60[, cfr_lci := cfr - 1.96*cfr_se]
-cfr_60[, cfr_uci := cfr + 1.96*cfr_se]
-cfr_60[, x:= 1-cfr]
-cfr_60[, x_se := x*(1-x)/N]
-
-## absolute risk
-cfr_60[, abs_risk := 1 - x^exp(y)]
-cfr_60[, var_abs_risk := ((exp(y)*x^(exp(y)-1))^2)*x_se^2 + (( exp(y)* (x^(exp(y)) *log(x)))^2)*y_se^2]
-cfr_60[, var_abs_risk_se := sqrt(var_abs_risk)]
-cfr_60[, uci := abs_risk + 1.96*var_abs_risk_se]
-cfr_60[, lci := abs_risk - 1.96*var_abs_risk_se]
-
-
-fmt_pct <- function(a,b,c){
-    paste0(signif(a*100,3), " (", signif(b*100,3), "-", signif(c*100,3),")")}
-
-
-abs_risk_tab_28 <- cfr_28[, .("Sex" = sex, "Age" = age_group,
-                              `Base CFR 28 days` = fmt_pct(cfr, cfr_lci, cfr_uci),
-                              `New CFR 28 days` = fmt_pct(abs_risk, lci, uci))
-                          
-]
-abs_risk_tab_60 <- cfr_60[, .("Sex" = sex, "Age" = age_group,
-                              `Base CFR 60 days` = fmt_pct(cfr, cfr_lci, cfr_uci),
-                              `New CFR 60 days` = fmt_pct(abs_risk, lci, uci))
-                          
+abs_risk_tab_28 <- cfr_28[, 
+    .("Sex" = sex, "Age" = age_group,
+      `Baseline CFR` = fmt_pct(cfr, cfr_lci, cfr_uci),
+      `Variant CFR`  = fmt_pct(abs_risk, lci, uci))
 ]
 
 age_lev <- c("[1,35)", "[35,55)", "[55,70)", "[70,85)", "[85,120)")
 age_lab <- c("0-34", "35-54", "55-69", "70-84", "85+")
 
 abs_risk_tab_28[, Age := factor(Age, levels = age_lev, labels = age_lab)]
-abs_risk_tab_60[, Age := factor(Age, levels = age_lev, labels = age_lab)]
 
 
-abs_risk_tab2 <- merge(abs_risk_tab_28, abs_risk_tab_60, by = c("Sex", "Age"))[order(Sex, Age)]
-fwrite(abs_risk_tab2, "./output/table5_abs_risk_pvoc.csv")
+abs_risk_tab2 <- abs_risk_tab_28
+abs_risk_tab2
 
 
 abs_risk_tab1
 abs_risk_tab2
 
-abs_risk_tab = cbind(abs_risk_tab1[, 1:4], abs_risk_tab2[, 4], abs_risk_tab1[, 5:6], abs_risk_tab2[, 6])
-names(abs_risk_tab) = c("Sex", "Age", "Baseline, 28 days", "SGTF, 28 days", "pVOC, 28 days", "Baseline, 60 days", "SGTF, 60 days", "pVOC, 60 days")
-abs_risk_tab
+abs_risk_tab = cbind(abs_risk_tab1[, 1:4], abs_risk_tab2[, 4])
+names(abs_risk_tab) = c("Sex", "Age", "Baseline CFR", "Variant CFR (complete cases)", "Variant CFR (IPW)")
+abs_risk_tab = abs_risk_tab[order(Sex, Age)]
 abs_risk_tab[Age == "85+", Age := "85 and older"]
+abs_risk_tab
 fwrite(abs_risk_tab, "./output/table5.csv")

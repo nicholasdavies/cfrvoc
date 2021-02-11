@@ -73,15 +73,14 @@ ggsave("./output/kmcurves_60_sex.png", pl, width = 10, height = 5, units = "cm")
 # By Age ------------------------------------------------------------------
 
 
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group == "(0,35]"])
-plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.999, 1), .margin = 0.3, .title = "0-34", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group  == "(35,55]"])
-plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.996, 1), .margin = 0.3, .title = "35-54", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group == "(55,70]"])
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group == "[1,35)"])
+plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.9998, 1), .margin = 0.3, .title = "1-34", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group  == "[35,55)"])
+plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.998, 1), .margin = 0.3, .title = "35-54", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group == "[55,70)"])
 plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.98, 1), .margin = 0.3, .title = "55-69", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group  %in% c("(70,85]", "(85,120]")])
-plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.89, 1), .margin = 0.3, .title = "70+", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group  %in% c("[70,85)", "[85,120)")])
+plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.90, 1), .margin = 0.3, .title = "70+", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 
 
 pl = cowplot::plot_grid(plA, plB, plC, plD, ncol = 2, labels = letters, label_size = 10)

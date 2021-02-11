@@ -81,6 +81,7 @@ wL2 = missingness("wL2", missing ~ rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + e
 wR2 = missingness("wR2", missing ~ rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat * asymptomatic + LTLA_name + rcs(specimen_t, nk = 3),
     gosset(nu = 4), function(x) pt(x, df = 4), dataW)
 
+wC1 = qread("./output/wC1_missing.qs")
 
 diagnostic = function(w)
 {
@@ -98,7 +99,7 @@ diagnostic = function(w)
     return (list(ph = ph, pw = pw))
 }
 
-diagnostic(wC1)
+ggsave("./output/missingness_QQ.png", diagnostic(wC1)$ph, width = 15, height = 15, units = "cm")
 diagnostic(wR1)
 diagnostic(wL1)
 diagnostic(wC2)

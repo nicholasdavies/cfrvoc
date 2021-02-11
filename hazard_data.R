@@ -13,7 +13,7 @@ prefer = function(a, b)
 }
 
 # Load and assemble complete data set
-complete_data = function(dateid, pressure_shift = 7)
+complete_data = function(dateid, sgtfv_file = "./sgtf_voc.csv")
 {
     # Note: These files contain personally identifiable information, so they are not included with the repo.
     d_death = phe_deaths(dateid)
@@ -27,22 +27,19 @@ complete_data = function(dateid, pressure_shift = 7)
     d = merge(d, d_death, by.x = "FINALID", by.y = "finalid", all = TRUE)
     
     # sgtfvoc: from misclassification.R
-    sgtfvoc = fread("./sgtf_voc.csv")
+    sgtfvoc = fread(sgtfv_file)
     d = merge(d, sgtfvoc[, .(specimen_date.x = date, NHSER_name = group, sgtfv)], by = c("specimen_date.x", "NHSER_name"), all.x = TRUE)
-    
-    # pressure: from pressure.R
-    pressure = fread("~/Documents/uk_covid_data_sensitive/pressure-2021-01-31.csv")
-    pressure[, date := date - pressure_shift];
-    d = merge(d, pressure, by.x = c("specimen_date.x", "NHSER_code"), by.y = c("date", "nhscd"), all.x = TRUE);
-
-    # pressure = fread("~/Documents/uk_covid_data_sensitive/pressure_ltla-2021-01-31.csv")
-    # pressure[, date := date - pressure_shift];
-    # d = merge(d, pressure, by.x = c("specimen_date.x", "LTLA_code"), by.y = c("date", "ltla"), all.x = FALSE);
     
     d[, data_id := dateid];
     d[, age := prefer(age.y, age.x)];
     
     return (d)
+}
+
+# Load reduced data set
+reduced_data = function(dateid, sgtfv_file = "./sgtf_voc.csv")
+{
+    return (qread(paste0("./dataset/reduced_data_", dateid, ".qs")))
 }
 
 # Make reduced data set from complete_data 
@@ -72,7 +69,6 @@ make_reduced = function(d)
         covidcod,
         death_type28,
         death_type60cod,
-        mv_pressure, ni_pressure, os_pressure, ao_pressure, medstaff_abs_per_bed, nursing_abs_per_bed,
         data_id)];
     
     # Seed R random number generator with cryptographically random bytes
@@ -186,11 +182,7 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
             covidcod = ifelse(!is.na(covidcod) & covidcod == "Y", 1, 0),
             death_type28 = ifelse(is.na(death_type28), 0, death_type28),
             death_type60cod = ifelse(is.na(death_type60cod), 0, death_type60cod),
-            mv_pressure, ni_pressure, os_pressure, ao_pressure, medstaff_abs_per_bed, nursing_abs_per_bed,
-            ##mv_pressure, medstaff_abs_per_bed, nursing_abs_per_bed,
             data_id)];
-    
-    #warning("Only loading three pressure variables.")
     
     if (!keep_missing) {
         data = data[!is.na(sgtf)]

@@ -5,6 +5,9 @@ library(qs)
 library(ggplot2)
 library(cowplot)
 library(survminer)
+library(survey)
+library(aod)
+
 
 source("./hazard_data.R")
 
@@ -44,8 +47,7 @@ do_cox_work = function(mdl_id, formula, data, strata_cols, use_weights = FALSE)
     if (use_weights == FALSE) {
         model = coxph(formula, data = data)
     } else {
-        wt = data$wt
-        model = coxph(formula, data = data, weights = wt)
+        model = svycoxph(formula, data = data, svydesign(ids = ~1, weights = ~wt, data = data))
     }
     
     print(summary(model))
@@ -89,7 +91,7 @@ do_cox_work = function(mdl_id, formula, data, strata_cols, use_weights = FALSE)
 
 load_model = function(mdl_id)
 {
-    if (class(mdl_id) == "coxph") {
+    if ("coxph" %in% class(mdl_id)) {
         return (mdl_id)
     } else {
         return (qread(paste0("./output/models/", make.names(mdl_id), ".qs")))
@@ -116,17 +118,19 @@ do_cox_interaction = function(mdl_id, marker, group, terms, data, strata_cols)
         data2[, (marker_names[g]) := ifelse(get(group) == group_levels[g], get(marker), 0)]
     }
     
-    # Run both formulas and check for interaction LRT
+    # Run both formulas and check for interaction by LRT / Wald
     formula_int = paste("Surv(time, status) ~", paste(c(marker_names, terms, "strata(stratum)"), collapse = " + "));
     formula_noint = paste("Surv(time, status) ~", paste(c(marker, terms, "strata(stratum)"), collapse = " + "));
+    formula_checkipw = paste("Surv(time, status) ~", paste(c(marker, terms, paste(marker, group, sep = ":")), collapse = " + "));
     
     model_int = list()
     model_noint = list()
     
-    model_int[[".cc"]]    = do_cox_work(paste0(mdl_id, ".cc"),  as.formula(formula_int),   data2, strata_cols, use_weights = FALSE)
-    model_int[[".ipw"]]   = do_cox_work(paste0(mdl_id, ".ipw"), as.formula(formula_int),   data2, strata_cols, use_weights = TRUE)
-    model_noint[[".cc"]]  = do_cox_work(paste0(mdl_id, ".cc"),  as.formula(formula_noint), data2, strata_cols, use_weights = FALSE)
-    model_noint[[".ipw"]] = do_cox_work(paste0(mdl_id, ".ipw"), as.formula(formula_noint), data2, strata_cols, use_weights = TRUE)
+    model_int[[".cc"]]    = do_cox_work(paste0("int",   mdl_id, ".cc"),  as.formula(formula_int),      data2, strata_cols, use_weights = FALSE)
+    model_int[[".ipw"]]   = do_cox_work(paste0("int",   mdl_id, ".ipw"), as.formula(formula_int),      data2, strata_cols, use_weights = TRUE)
+    model_noint[[".cc"]]  = do_cox_work(paste0("noint", mdl_id, ".cc"),  as.formula(formula_noint),    data2, strata_cols, use_weights = FALSE)
+    model_noint[[".ipw"]] = do_cox_work(paste0("noint", mdl_id, ".ipw"), as.formula(formula_noint),    data2, strata_cols, use_weights = TRUE)
+    model_checkipw        = do_cox_work(paste0("test checkipw", mdl_id), as.formula(formula_checkipw), data2, strata_cols, use_weights = TRUE)
     
     # Write to summary file
     if (!mdl_id %like% "^test") {
@@ -139,8 +143,14 @@ do_cox_interaction = function(mdl_id, marker, group, terms, data, strata_cols)
             print(summary(model_int[[suffix]]))
             cat("\n\nWithout interaction: ", formula_int, "\n");
             print(summary(model_noint[[suffix]]))
-            cat("\n\nLikelihood ratio test:\n")
-            print(anova(model_int[[suffix]], model_noint[[suffix]]))
+            
+            if (suffix == ".cc") {
+                cat("\n\nLikelihood ratio test:\n")
+                print(anova(model_int[[suffix]], model_noint[[suffix]]))
+            } else if (suffix == ".ipw") {
+                cat("\n\nWald test:\n")
+                print(waldt(model_checkipw, like = paste0(marker, ":")))
+            }
             sink(NULL)
             
             # Save models
@@ -157,6 +167,25 @@ lrt = function(id_base, id_nested)
     anova(model_nested, model_base);
 }
 
+# Do joint Wald test for a saved model, specific terms
+waldt = function(model_id, terms, like = NULL)
+{
+    model = load_model(model_id)
+    cv = vcov(model)
+    cf = coef(model)
+    if (is.null(like)) {
+        cx = which(names(cf) %in% terms)
+    } else {
+        cx = which(names(cf) %like% like)
+    }
+    cat("Joint Wald test for terms:\n")
+    print(names(cf)[cx])
+    wald.test(cv, cf, cx)
+}
+
+
+
+
 
 
 
@@ -164,17 +193,20 @@ lrt = function(id_base, id_nested)
 # ESTIMATE WEIGHTS #
 ####################
 
+# Load data
 cd = complete_data("20210205")
+#cd = reduced_data("20210205") # Use this line to load the reduced data set supplied with the repo.
 dataW = model_data(cd, "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 0, P_voc = 0, 
     date_min = "2020-09-01", date_max = "2100-01-01", prevalence_cutoff = FALSE, sgtfv_cutoff = 0, keep_missing = TRUE, death_type = "all")
 
-# Load data
 dataW[, missing := ifelse(is.na(sgtf), 1, 0)]
 dataW[, specimen_week_f := factor(specimen_week)]
 
+# Estimate missingness model (takes a while to run)
 missing_model = glm(missing ~ rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat * asymptomatic + NHSER_name * specimen_week_f, 
     family = binomial(link = "cauchit"), data = dataW, control = list(trace = TRUE));
 
+# Add weights from missingness model to data from model_data
 weight_data = function(data, missing_model)
 {
     data[, specimen_week_f := factor(specimen_week)]
@@ -233,19 +265,15 @@ do_cox("d28.SGTF.ss.2020-11-01..r10.LTLA:date.", Surv(time, status) ~ sgtf + rcs
 
 # LRT linear age, linear IMD -> spline age, linear IMD
 lrt("d28.SGTF.ll.2020-11-01..r10.LTLA:date..cc", "d28.SGTF.sl.2020-11-01..r10.LTLA:date..cc")
-lrt("d28.SGTF.ll.2020-11-01..r10.LTLA:date..ipw", "d28.SGTF.sl.2020-11-01..r10.LTLA:date..ipw")
 
 # LRT linear age, linear IMD -> linear age, spline IMD
 lrt("d28.SGTF.ll.2020-11-01..r10.LTLA:date..cc", "d28.SGTF.ls.2020-11-01..r10.LTLA:date..cc")
-lrt("d28.SGTF.ll.2020-11-01..r10.LTLA:date..ipw", "d28.SGTF.ls.2020-11-01..r10.LTLA:date..ipw")
 
 # LRT linear age, spline IMD -> spline age, spline IMD
 lrt("d28.SGTF.ls.2020-11-01..r10.LTLA:date..cc", "d28.SGTF.ss.2020-11-01..r10.LTLA:date..cc")
-lrt("d28.SGTF.ls.2020-11-01..r10.LTLA:date..ipw", "d28.SGTF.ss.2020-11-01..r10.LTLA:date..ipw")
 
 # LRT spline age, linear IMD -> spline age, spline IMD
 lrt("d28.SGTF.sl.2020-11-01..r10.LTLA:date..cc", "d28.SGTF.ss.2020-11-01..r10.LTLA:date..cc")
-lrt("d28.SGTF.sl.2020-11-01..r10.LTLA:date..ipw", "d28.SGTF.ss.2020-11-01..r10.LTLA:date..ipw")
 
 # Alternative stratifications
 do_cox("d28.SGTF.ss.2020-11-01..r10.NHSE:week.", Surv(time, status) ~ sgtf + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("NHSER_name", "specimen_week"))
@@ -262,57 +290,7 @@ do_cox_interaction("sex", "sgtf", "sex",          c("rcs(age, nk = 3)", "sex", "
 do_cox_interaction("imd", "sgtf", "imd_group",    c("rcs(age, nk = 3)", "sex", "imd_group",        "eth_cat", "res_cat"), dataS, c("LTLA_name", "specimen_date"))
 do_cox_interaction("eth", "sgtf", "eth_cat",      c("rcs(age, nk = 3)", "sex", "rcs(imd, nk = 3)", "eth_cat", "res_cat"), dataS, c("LTLA_name", "specimen_date"))
 do_cox_interaction("res", "sgtf", "res_cat",      c("rcs(age, nk = 3)", "sex", "rcs(imd, nk = 3)", "eth_cat", "res_cat"), dataS, c("LTLA_name", "specimen_date"))
-do_cox_interaction("asy", "sgtf", "asymptomatic", c("rcs(age, nk = 3)", "sex", "rcs(imd, nk = 3)", "eth_cat", "res_cat", "asymptomatic"), dataS, c("LTLA_name", "specimen_date"))
 
-
-# age - alternative
-int_0age = do_cox("test", Surv(time, status) ~ sgtf +
-        rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("LTLA_name", "specimen_date")) 
-int_1age = do_cox("test", Surv(time, status) ~ sgtf * rcs(age, nk = 3) +
-        rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("LTLA_name", "specimen_date")) 
-
-lrt(int_0age$model_cc,  int_1age$model_cc)  # **
-lrt(int_0age$model_ipw, int_1age$model_ipw) # ***
-
-# Investigating significant SGTF x residence type term -- does this explain other significant interactions for IPW model?
-
-# age
-int_res_0age = do_cox("test", Surv(time, status) ~ sgtf * res_cat +
-        rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("LTLA_name", "specimen_date")) 
-int_res_1age = do_cox("test", Surv(time, status) ~ sgtf * (res_cat + rcs(age, nk = 3)) +
-        rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("LTLA_name", "specimen_date")) 
-
-lrt(int_res_0age$model_cc,  int_res_1age$model_cc)  # **
-lrt(int_res_0age$model_ipw, int_res_1age$model_ipw) # ***
-
-# sex
-int_res_0sex = do_cox("test", Surv(time, status) ~ sgtf * res_cat +
-        rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("LTLA_name", "specimen_date")) 
-int_res_1sex = do_cox("test", Surv(time, status) ~ sgtf * (res_cat + sex) +
-        rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("LTLA_name", "specimen_date")) 
-
-lrt(int_res_0sex$model_cc,  int_res_1sex$model_cc)
-lrt(int_res_0sex$model_ipw, int_res_1sex$model_ipw)
-
-# imd
-int_res_0imd = do_cox("test", Surv(time, status) ~ sgtf * res_cat +
-        rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("LTLA_name", "specimen_date")) 
-int_res_1imd = do_cox("test", Surv(time, status) ~ sgtf * (res_cat + rcs(imd, nk = 3)) +
-        rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("LTLA_name", "specimen_date")) 
-
-lrt(int_res_0imd$model_cc,  int_res_1imd$model_cc)
-lrt(int_res_0imd$model_ipw, int_res_1imd$model_ipw)
-
-# eth
-int_res_0eth = do_cox("test", Surv(time, status) ~ sgtf * res_cat +
-        rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("LTLA_name", "specimen_date")) 
-int_res_1eth = do_cox("test", Surv(time, status) ~ sgtf * (res_cat + eth_cat) +
-        rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataS, c("LTLA_name", "specimen_date")) 
-
-lrt(int_res_0eth$model_cc,  int_res_1eth$model_cc)
-lrt(int_res_0eth$model_ipw, int_res_1eth$model_ipw)
-
-# TODO interaction tests in the model with SGTF:time interaction.
 
 # 3. CENSORING LENGTHS / DEATH TYPES
 dataS_d07 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 7,  reg_cutoff = 10, P_voc = 0, date_min = "2020-11-01")
@@ -380,9 +358,8 @@ do_cox("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf:tstop+sgtf:tstop2",
 
 # LRT time interaction
 lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.0sgtf:tstop.cc",  "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf:tstop.cc")
-lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.0sgtf:tstop.ipw", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf:tstop.ipw")
-lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf:tstop.cc",   "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf:tstop+sgtf:tstop2.cc")
-lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf:tstop.ipw",  "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf:tstop+sgtf:tstop2.ipw")
+lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf:tstop.cc",  "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf:tstop+sgtf:tstop2.cc")
+waldt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf:tstop.ipw", "sgtf:tstop")
 
 # 5b. TIME-AGE
 do_cox("d28.SGTF.ls.2020-11-01..r10.LTLA:date.0age:tstop", 
@@ -396,8 +373,9 @@ do_cox("d28.SGTF.ls.2020-11-01..r10.LTLA:date.age:tstop+age:tstop2",
     dataST, c("LTLA_name", "specimen_date"))
 
 # LRT time interaction
-lrt("d28.SGTF.ls.2020-11-01..r10.LTLA:date.0age:tstop", "d28.SGTF.ls.2020-11-01..r10.LTLA:date.age:tstop")
-lrt("d28.SGTF.ls.2020-11-01..r10.LTLA:date.age:tstop", "d28.SGTF.ls.2020-11-01..r10.LTLA:date.age:tstop+age:tstop2")
+lrt("d28.SGTF.ls.2020-11-01..r10.LTLA:date.0age:tstop.cc", "d28.SGTF.ls.2020-11-01..r10.LTLA:date.age:tstop.cc")
+lrt("d28.SGTF.ls.2020-11-01..r10.LTLA:date.age:tstop.cc", "d28.SGTF.ls.2020-11-01..r10.LTLA:date.age:tstop+age:tstop2.cc")
+waldt("d28.SGTF.ls.2020-11-01..r10.LTLA:date.age:tstop.ipw", "age:tstop")
 
 # 5c. TIME-SEX
 do_cox("d28.SGTF.ss.2020-11-01..r10.LTLA:date.0sex:tstop", 
@@ -411,8 +389,9 @@ do_cox("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sex:tstop+sex:tstop2",
     dataST, c("LTLA_name", "specimen_date"))
 
 # LRT time interaction
-lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.0sex:tstop", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sex:tstop")
-lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sex:tstop", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sex:tstop+sex:tstop2")
+lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.0sex:tstop.cc", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sex:tstop.cc")
+lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sex:tstop.cc", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sex:tstop+sex:tstop2.cc")
+waldt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sex:tstop.ipw", "sexM:tstop")
 
 # 5d. TIME-IMD
 do_cox("d28.SGTF.sl.2020-11-01..r10.LTLA:date.0imd:tstop", 
@@ -426,8 +405,9 @@ do_cox("d28.SGTF.sl.2020-11-01..r10.LTLA:date.imd:tstop+imd:tstop2",
     dataST, c("LTLA_name", "specimen_date"))
 
 # LRT time interaction
-lrt("d28.SGTF.sl.2020-11-01..r10.LTLA:date.0imd:tstop", "d28.SGTF.sl.2020-11-01..r10.LTLA:date.imd:tstop")
-lrt("d28.SGTF.sl.2020-11-01..r10.LTLA:date.imd:tstop", "d28.SGTF.sl.2020-11-01..r10.LTLA:date.imd:tstop+imd:tstop2")
+lrt("d28.SGTF.sl.2020-11-01..r10.LTLA:date.0imd:tstop.cc", "d28.SGTF.sl.2020-11-01..r10.LTLA:date.imd:tstop.cc")
+lrt("d28.SGTF.sl.2020-11-01..r10.LTLA:date.imd:tstop.cc", "d28.SGTF.sl.2020-11-01..r10.LTLA:date.imd:tstop+imd:tstop2.cc")
+waldt("d28.SGTF.sl.2020-11-01..r10.LTLA:date.imd:tstop.ipw", "imd:tstop")
 
 # 5e. TIME-ETHNICITY
 do_cox("d28.SGTF.ss.2020-11-01..r10.LTLA:date.0eth:tstop", 
@@ -441,8 +421,9 @@ do_cox("d28.SGTF.ss.2020-11-01..r10.LTLA:date.eth:tstop+eth:tstop2",
     dataST, c("LTLA_name", "specimen_date"))
 
 # LRT time interaction
-lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.0eth:tstop", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.eth:tstop")
-lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.eth:tstop", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.eth:tstop+eth:tstop2")
+lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.0eth:tstop.cc", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.eth:tstop.cc")
+lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.eth:tstop.cc", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.eth:tstop+eth:tstop2.cc")
+waldt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.eth:tstop.ipw", like = "eth[A-Z]:tstop")
 
 # 5f. TIME-RESIDENCE TYPE
 do_cox("d28.SGTF.ss.2020-11-01..r10.LTLA:date.0res:tstop", 
@@ -456,8 +437,9 @@ do_cox("d28.SGTF.ss.2020-11-01..r10.LTLA:date.res:tstop+res:tstop2",
     dataST, c("LTLA_name", "specimen_date"))
 
 # LRT time interaction
-lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.0res:tstop", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.res:tstop")
-lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.res:tstop", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.res:tstop+res:tstop2")
+lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.0res:tstop.cc", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.res:tstop.cc")
+lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.res:tstop.cc", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.res:tstop+res:tstop2.cc")
+waldt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.res:tstop.ipw", like = "res[A-Z]:tstop")
 
 
 # 6. SENSITIVITY ANALYSES
@@ -527,6 +509,11 @@ dataP60 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, deat
 weight_data(dataP60, missing_model)
 do_cox("d60.pVOC.ss.2020-11-01..r10.LTLA:date.", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataP60, c("LTLA_name", "specimen_date"))
 
+# 1d. P_VOC SENSITIVITY - SEQUENCING
+cds = complete_data("20210205", sgtfv_file = "./sgtf_voc_sequencing.csv")
+dataPnseq = model_data(cds, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0, date_min = "2020-11-01")
+weight_data(dataPnseq, missing_model)
+do_cox("d28.pVOC2.ss.2020-11-01..r10.LTLA:date.", Surv(time, status) ~ p_voc + rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataPnseq, c("LTLA_name", "specimen_date"))
 
 # 2. TIME-P_VOC
 event_times = dataPn[!is.na(death_date), sort(unique(as.numeric(death_date - specimen_date)))]
@@ -546,8 +533,9 @@ do_cox("d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc:tstop+p_voc:tstop2",
     dataPT, c("LTLA_name", "specimen_date"))
 
 # LRT time interaction
-lrt("d28.pVOC.ss.2020-11-01..r10.LTLA:date.0p_voc:tstop", "d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc:tstop")
-lrt("d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc:tstop", "d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc:tstop+p_voc:tstop2")
+lrt("d28.pVOC.ss.2020-11-01..r10.LTLA:date.0p_voc:tstop.cc", "d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc:tstop.cc")
+lrt("d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc:tstop.cc", "d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc:tstop+p_voc:tstop2.cc")
+waldt("d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc:tstop.ipw", "p_voc:tstop")
 
 
 
@@ -567,7 +555,6 @@ do_cox("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf_t", Surv(time, status) ~
         sgtf_t1 + sgtf_t2 + sgtf_t3 +
         rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataSt, c("LTLA_name", "specimen_date"))
 lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date..cc", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf_t.cc")
-lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date..ipw", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf_t.ipw")
 
 dataPt[, p_voc_t1 := ifelse(specimen_date >= "2020-11-01" & specimen_date <= "2020-11-30", p_voc, 0)]
 dataPt[, p_voc_t2 := ifelse(specimen_date >= "2020-12-01" & specimen_date <= "2020-12-31", p_voc, 0)]
@@ -576,7 +563,6 @@ do_cox("d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc_t", Surv(time, status) ~
         p_voc_t1 + p_voc_t2 + p_voc_t3 +
         rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataPt, c("LTLA_name", "specimen_date"))
 lrt("d28.pVOC.ss.2020-11-01..r10.LTLA:date..cc", "d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc_t.cc")
-lrt("d28.pVOC.ss.2020-11-01..r10.LTLA:date..ipw", "d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc_t.ipw")
 
 # HR by region
 
@@ -592,7 +578,6 @@ do_cox("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf_nhse", Surv(time, status) ~
         sgtf_ee + sgtf_ld + sgtf_ml + sgtf_ne + sgtf_nw + sgtf_se + sgtf_sw + 
         rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataSt, c("LTLA_name", "specimen_date"))
 lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date..cc", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf_nhse.cc")
-lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date..ipw", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf_nhse.ipw")
 
 
 dataPt[, p_voc_ee := ifelse(NHSER_name == "East of England",          p_voc, 0)]
@@ -607,7 +592,6 @@ do_cox("d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc_nhse", Surv(time, status) ~
         p_voc_ee + p_voc_ld + p_voc_ml + p_voc_ne + p_voc_nw + p_voc_se + p_voc_sw + 
         rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataPt, c("LTLA_name", "specimen_date"))
 lrt("d28.pVOC.ss.2020-11-01..r10.LTLA:date..cc", "d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc_nhse.cc")
-lrt("d28.pVOC.ss.2020-11-01..r10.LTLA:date..ipw", "d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc_nhse.ipw")
 
 
 # HR over time by residence type
@@ -637,7 +621,6 @@ do_cox("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf_resxt", Surv(time, status) ~
         sgtf_O_t1 + sgtf_O_t2 + sgtf_O_t3 + 
         rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataSt, c("LTLA_name", "specimen_date"))
 lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf_res.cc",  "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf_resxt.cc")
-lrt("d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf_res.ipw", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf_resxt.ipw")
 
 dataPt[, p_voc_R := ifelse(res_cat == "Residential"      , p_voc, 0)]
 dataPt[, p_voc_C := ifelse(res_cat == "Care/Nursing home", p_voc, 0)]
@@ -664,7 +647,6 @@ do_cox("d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc_resxt", Surv(time, status) ~
         p_voc_O_t1 + p_voc_O_t2 + p_voc_O_t3 + 
         rcs(age, nk = 3) + sex + rcs(imd, nk = 3) + eth_cat + res_cat + strata(stratum), dataPt, c("LTLA_name", "specimen_date"))
 lrt("d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc_res.cc",  "d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc_resxt.cc")
-lrt("d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc_res.ipw", "d28.pVOC.ss.2020-11-01..r10.LTLA:date.p_voc_resxt.ipw")
 
 
 
@@ -715,8 +697,8 @@ plot_hazard = function(marker, constant_model, linear_varying_model, ylimits, y_
     # return (haz)
 }
 
-# haz = plot_hazard("sgtf", "SGTF + lin age + lin IMD | LTLA + spec date", "Time-SGTF interaction term: SGTF + SGTF:tstop + lin age + lin IMD | LTLA + spec date", c(0, NA))
-# haz[t == 1, .(exp(x.ct), exp(x.lo), exp(x.hi))]
+# haz = plot_hazard("sgtf", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.0sgtf:tstop.cc", "d28.SGTF.ss.2020-11-01..r10.LTLA:date.sgtf:tstop.cc", c(0, 4), "Hazard ratio for SGTF")
+# haz[t == 28, .(exp(x.ct), exp(x.lo), exp(x.hi))]
 
 theme_set(theme_cowplot(font_size = 10))
 
@@ -733,37 +715,52 @@ hp_voc_ipw = plot_hazard("p_voc", "d28.pVOC.ss.2020-11-01..r10.LTLA:date.0p_voc:
 # Effects of SGTF
 
 summaries = fread("./output/model_summary.csv")
-summaries = summaries[str_count(model_id, "\\.") == 8] # TODO note this gets rid of some interaction tests
+summaries_int = summaries[str_count(model_id, "\\.") != 8]
+fwrite(
+    summaries_int[parameter %like% "^sgtf.", .(model_id, parameter, HR, HR.lo95, HR.hi95, P)],
+    "./output/table_subgroup_effects.csv"
+)
+
+summaries = summaries[str_count(model_id, "\\.") == 8] 
 summaries[, model_id := str_replace_all(model_id, "\\.ll\\.", ".L.L.")]
 summaries[, model_id := str_replace_all(model_id, "\\.sl\\.", ".S.L.")]
 summaries[, model_id := str_replace_all(model_id, "\\.ls\\.", ".L.S.")]
 summaries[, model_id := str_replace_all(model_id, "\\.ss\\.", ".S.S.")]
 summaries[, model_id := str_replace_all(model_id, "\\.r10\\.", ".10.")]
 summaries[, model_id := str_replace_all(model_id, "\\.rNA\\.", ".0.")]
+
+summaries[model_id == "d28.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.cc" & parameter == "sgtf_w1",
+    model_id := "d00-07.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.cc"]
+summaries[model_id == "d28.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.cc" & parameter == "sgtf_w2",
+    model_id := "d08-14.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.cc"]
+summaries[model_id == "d28.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.cc" & parameter == "sgtf_w3",
+    model_id := "d15-21.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.cc"]
+summaries[model_id == "d28.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.cc" & parameter == "sgtf_w4",
+    model_id := "d22-28.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.cc"]
+
+summaries[model_id == "d28.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.ipw" & parameter == "sgtf_w1",
+    model_id := "d00-07.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.ipw"]
+summaries[model_id == "d28.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.ipw" & parameter == "sgtf_w2",
+    model_id := "d08-14.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.ipw"]
+summaries[model_id == "d28.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.ipw" & parameter == "sgtf_w3",
+    model_id := "d15-21.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.ipw"]
+summaries[model_id == "d28.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.ipw" & parameter == "sgtf_w4",
+    model_id := "d22-28.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.ipw"]
+
+summaries = summaries[model_id != "d28.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.cc" &
+        model_id != "d28.SGTF.S.S.2020-11-01..10.LTLA:date.sgtf_by_week.ipw"]
+
+summaries[parameter %like% "^sgtf_w[1-4]$", parameter := "sgtf"]
+
 summaries[, c("m_deaths", "m_marker", "m_age", "m_imd", "m_startdate", "m_enddate", "m_reg_cutoff", "m_strata", "m_xvars", "m_weighting") := tstrsplit(model_id, "\\.")]
 summaries[m_enddate == "tminus38", m_enddate := "T - 38"]
 summaries = summaries[order(model_id)]
 
-groups = list(
-    `Geographical and temporal stratification` = list(
-        pattern = "d28/SGTF/S/S/2020-11-01//10/*//*",
-        highlight = 8
-    ),
-    `Age and IMD terms (linear vs. spline)` = list(
-        pattern = "d28/SGTF/*/*/2020-11-01//10/LTLA:date//*",
-        highlight = c(3, 4)
-    ),
-    # Interactions
+# Sensitivity analyses
+sensitivity_groups = list(
     `Death type` = list(
         pattern = "*/SGTF/S/S/2020-11-01//10/LTLA:date//*",
         highlight = 1
-    ),
-    # SGTF by week / nonoverlapping periods into episode
-    # SGTF by calendar period
-    # Time-X interaction
-    `Analysis start date` = list(
-        pattern = "d28/SGTF/S/S/*//10/LTLA:date//*",
-        highlight = 5
     ),
     
     `Misclassification adjustment` = list(
@@ -771,32 +768,79 @@ groups = list(
         highlight = c(1, 2, 5)
     ),
     
-    `Miscellaneous` = list(
+    `Geographical and temporal stratification` = list(
+        pattern = "d28/SGTF/S/S/2020-11-01//10/*//*",
+        highlight = 8
+    ),
+    
+    `Age and IMD terms (linear vs. spline)` = list(
+        pattern = "d28/SGTF/*/*/2020-11-01//10/LTLA:date//*",
+        highlight = c(3, 4)
+    ),
+    
+    `By week since specimen` = list(
+        pattern = "*/SGTF/S/S/2020-11-01//10/LTLA:date/sgtf_by_week/*",
+        highlight = 1
+    ),
+    
+    `Analysis start date` = list(
+        pattern = "d28/SGTF/S/S/*//10/LTLA:date//*",
+        highlight = 5
+    ),
+    
+    `Covariate interactions with time since positive test` = list(
+        pattern = "d28/SGTF/L/S/2020-11-01//10/LTLA:date/age:tstop/*",
+        highlight = 9
+    ),
+    `.sex` = list(
+        pattern = "d28/SGTF/S/S/2020-11-01//10/LTLA:date/sex:tstop/*",
+        highlight = 9
+    ),
+    `.imd` = list(
+        pattern = "d28/SGTF/S/L/2020-11-01//10/LTLA:date/imd:tstop/*",
+        highlight = 9
+    ),
+    `.eth` = list(
+        pattern = "d28/SGTF/S/S/2020-11-01//10/LTLA:date/eth:tstop/*",
+        highlight = 9
+    ),
+    `.res` = list(
+        pattern = "d28/SGTF/S/S/2020-11-01//10/LTLA:date/res:tstop/*",
+        highlight = 9
+    ),
+
+    `No registration cutoff` = list(
         pattern = "d28/SGTF/S/S/2020-11-01//0/LTLA:date//*",
-        highlight = c(7)
+        highlight = 7
     ),
     
-    `.1` = list(
+    `Adjustment for, not stratification by, region and time` = list(
         pattern = "d28/SGTF/S/S/2020-11-02/2020-01-24/10//NHSE:week/*",
-        highlight = c(9)
+        highlight = 9
     ),
     
-    `.2` = list(
+    `Subjects with full 28-day follow-up only` = list(
         pattern = "d28/SGTF/S/S/2020-11-01/tminus38/0/LTLA:date//*",
         highlight = c(6, 7)
     ),
     
-    `.3` = list(
+    `Asymptomatic screening indicator included as covariate` = list(
         pattern = "d28/SGTF/S/S/2020-11-01//10/LTLA:date/asymptomatic/*",
-        highlight = c(9)
+        highlight = 9
+    ),
+    
+    `Alternative misclassification adjustment` = list(
+        pattern = "*/pVOC2/*/*/*/*/*/*//*",
+        highlight = 2
     )
 )
+
 
 library(ggstance)
 theme_set(theme_cowplot(font_size = 10))
 
-pl_effects = plot_forest(summaries, groups, 13, -2.8, 0.3, x_widths = c(0.7, 1.3, 1.1, 0.7, 1.6, 2.6, 1.8, 1.8, 2.8))
-ggsave("./output/summary.png", pl_effects, width = 20, height = 20, units = "cm")
+pl_sensitivity = plot_forest(summaries, sensitivity_groups, 13, -3.9, 0.2, x_widths = c(0.7, 1.3, 1.1, 0.7, 1.6, 2.6, 1.8, 1.8, 2.8))
+ggsave("./output/S1-hazard-sensitivity.png", pl_sensitivity, width = 20, height = 25, units = "cm")
 
 
 plot_forest = function(summaries, groups, left_margin, tab_from, tab_to, x_widths = c(1, 1.5, 1, 1, 2, 2, 1, 2, 3))
@@ -811,6 +855,7 @@ plot_forest = function(summaries, groups, left_margin, tab_from, tab_to, x_width
     table_cols = c("m_deaths", "m_marker", "m_age", "m_imd", "m_startdate", "m_enddate", "m_reg_cutoff", "m_strata", "m_xvars", "m_weighting");
     pd = data.table()
     headings = data.table()
+    summary_table = data.table()
     y_index = 1;
     for (g in seq_along(groups)) {
         if (!names(groups)[g] %like% "^\\.") {
@@ -818,17 +863,21 @@ plot_forest = function(summaries, groups, left_margin, tab_from, tab_to, x_width
                 data.table(label = names(groups)[g], y_index)
             )
             y_index = y_index + 1;
+            
+            summary_table = rbind(summary_table, data.table(analysis = names(groups)[g]), fill = TRUE)
         }
         model_ids = summaries[model_id %like% interpret(groups[[g]]$pattern), unique(model_id)];
         model_ids_genus = unique(str_remove_all(model_ids, "\\.cc$|\\.ipw$"))
         
         for (model in model_ids_genus) {
-            pd = rbind(pd,
-                summaries[(model_id == model | model_id == paste0(model, ".cc") | model_id == paste0(model, ".ipw")) & parameter %like% "^sgtf$|^p_voc$", 
-                    .(h = HR, h0 = HR.lo95, h1 = HR.hi95, 
+            entry = summaries[(model_id == model | model_id == paste0(model, ".cc") | model_id == paste0(model, ".ipw")) & parameter %like% "^sgtf$|^p_voc$", 
+                    .(parameter, h = HR, h0 = HR.lo95, h1 = HR.hi95, 
                       blank = "", highlight = paste(table_cols[groups[[g]]$highlight], collapse = "|"), y_index,
                       m_deaths, m_marker, m_age, m_imd, m_startdate, m_enddate, m_reg_cutoff, m_strata, m_xvars, m_weighting)]
-            )
+            
+            pd = rbind(pd, entry)
+            summary_table = rbind(summary_table, entry, use.names = TRUE, fill = TRUE)
+
             y_index = y_index + 1;
         }
     }
@@ -842,8 +891,13 @@ plot_forest = function(summaries, groups, left_margin, tab_from, tab_to, x_width
     labels[, x_pos := tab_from + (tab_to - tab_from) * x_shifts[x_index] / max(x_shifts)]
     labels[, colour := ifelse(variable %like% highlight, "#000000", "#888888"), by = .(y_index, x_index)]
     
+    fwrite(
+        summary_table,
+        "./output/table_sensitivity_effects.csv"
+    )
+    
     # Make table structure
-    tabr = data.table(xmin = tab_from - 0.2, xmax = 2.6, 
+    tabr = data.table(xmin = tab_from - 0.2, xmax = 3.0, 
         ymin = labels[, unique(y_index) - 0.5], ymax = labels[, unique(y_index) + 0.5])
     tabr[, fill := rep_len(c("#f0f0f0", "#f8f8f8"), .N)]
     tabt = data.table(label = c("Death\ntype", "Marker", "Age", "IMD", "Start\ndate", "End\ndate", 
@@ -865,11 +919,11 @@ plot_forest = function(summaries, groups, left_margin, tab_from, tab_to, x_width
             guide = guide_legend(reverse = TRUE, override.aes = list(fatten = 0.1))) +
         labs(x = "Hazard ratio", y = NULL, colour = NULL) +
         theme(plot.margin = unit(c(0.1, 0.3, 0.1, left_margin), "cm"),
-            legend.position = c(0.1, 0.975)) +
+            legend.position = c(0.15, 0.975)) +
         annotate("text", x = tabt$x, y = tabt$y, label = tabt$label, hjust = 1, vjust = 0.5, angle = 90, lineheight = 0.75, size = 3.5) +
         annotate("text", x = labels$x_pos, y = labels$y_index, label = labels$value, colour = labels$colour, size = 3.5) +
         annotate("text", x = mean(c(tab_from, tab_to)), y = headings$y_index, label = headings$label, size = 3.5) +
-        coord_cartesian(xlim = c(0.8, 2.5), clip = 'off')
+        coord_cartesian(xlim = c(0.8, 3.0), clip = 'off')
 }
 
 
@@ -938,8 +992,4 @@ pl9 = res_plot2(resid, "res_catOther.Unknown", "residence type\n(Other/Unknown)"
 pl = cowplot::plot_grid(pl1, pl2, pl3, pl4, pl5, pl6, pl7, pl8, pl9, labels = letters, label_size = 10, nrow = 3)
 ggsave("./output/schoenfeld.pdf", width = 20, height = 20, units = "cm", useDingbats = FALSE)
 ggsave("./output/schoenfeld.png", width = 20, height = 20, units = "cm")
-
-
-
-
 

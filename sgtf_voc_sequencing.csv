@@ -1,0 +1,1268 @@
+group,date,sgtf,voc,sgtfv
+East of England,2020-09-01,2,0,0
+East of England,2020-09-02,2,0,0
+East of England,2020-09-03,3,0,0
+East of England,2020-09-04,0,0,0
+East of England,2020-09-05,0,0,0
+East of England,2020-09-06,1,0,0
+East of England,2020-09-07,4,0,0
+East of England,2020-09-08,1,0,0
+East of England,2020-09-09,1,0,0
+East of England,2020-09-10,4,0,0
+East of England,2020-09-11,0,0,0
+East of England,2020-09-12,0,0,0
+East of England,2020-09-13,0,0,0
+East of England,2020-09-14,3,0,0
+East of England,2020-09-15,3,0,0
+East of England,2020-09-16,0,0,0
+East of England,2020-09-17,0,0,0
+East of England,2020-09-18,0,0,0
+East of England,2020-09-19,1,0,0
+East of England,2020-09-20,2,0,0
+East of England,2020-09-21,4,0,0
+East of England,2020-09-22,0,0,0
+East of England,2020-09-23,2,0,0
+East of England,2020-09-24,7,0,0
+East of England,2020-09-25,4,0,0
+East of England,2020-09-26,0,0,0
+East of England,2020-09-27,0,0,0
+East of England,2020-09-28,1,0,0
+East of England,2020-09-29,1,0,0
+East of England,2020-09-30,1,0,0
+East of England,2020-10-01,5,0,0
+East of England,2020-10-02,0,0,0
+East of England,2020-10-03,3,0,0
+East of England,2020-10-04,0,0,0
+East of England,2020-10-05,1,0,0
+East of England,2020-10-06,9,0,0
+East of England,2020-10-07,0,0,0
+East of England,2020-10-08,0,0,0
+East of England,2020-10-09,4,0,0
+East of England,2020-10-10,0,0,0
+East of England,2020-10-11,3,0,0
+East of England,2020-10-12,1,0,0
+East of England,2020-10-13,2,0,0
+East of England,2020-10-14,2,0,0
+East of England,2020-10-15,8,0,0
+East of England,2020-10-16,1,0,0
+East of England,2020-10-17,0,0,0
+East of England,2020-10-18,0,0,0
+East of England,2020-10-19,1,0,0
+East of England,2020-10-20,3,0,0
+East of England,2020-10-21,8,1,0.125
+East of England,2020-10-22,0,0,0.0625
+East of England,2020-10-23,7,0,0
+East of England,2020-10-24,3,0,0
+East of England,2020-10-25,0,0,0.0666666666666667
+East of England,2020-10-26,0,0,0.133333333333333
+East of England,2020-10-27,0,0,0.2
+East of England,2020-10-28,0,0,0.266666666666667
+East of England,2020-10-29,6,2,0.333333333333333
+East of England,2020-10-30,8,2,0.25
+East of England,2020-10-31,4,1,0.25
+East of England,2020-11-01,7,1,0.142857142857143
+East of England,2020-11-02,15,9,0.6
+East of England,2020-11-03,4,4,1
+East of England,2020-11-04,3,1,0.333333333333333
+East of England,2020-11-05,9,7,0.777777777777778
+East of England,2020-11-06,11,8,0.727272727272727
+East of England,2020-11-07,0,0,0.688636363636364
+East of England,2020-11-08,20,13,0.65
+East of England,2020-11-09,22,16,0.727272727272727
+East of England,2020-11-10,3,2,0.666666666666667
+East of England,2020-11-11,9,6,0.666666666666667
+East of England,2020-11-12,27,24,0.888888888888889
+East of England,2020-11-13,31,21,0.67741935483871
+East of England,2020-11-14,10,10,1
+East of England,2020-11-15,22,19,0.863636363636364
+East of England,2020-11-16,7,3,0.428571428571429
+East of England,2020-11-17,17,12,0.705882352941177
+East of England,2020-11-18,11,8,0.727272727272727
+East of England,2020-11-19,13,11,0.846153846153846
+East of England,2020-11-20,8,6,0.75
+East of England,2020-11-21,42,39,0.928571428571429
+East of England,2020-11-22,64,60,0.9375
+East of England,2020-11-23,21,20,0.952380952380952
+East of England,2020-11-24,5,3,0.6
+East of England,2020-11-25,5,4,0.8
+East of England,2020-11-26,14,12,0.857142857142857
+East of England,2020-11-27,8,8,1
+East of England,2020-11-28,10,9,0.9
+East of England,2020-11-29,12,12,1
+East of England,2020-11-30,9,8,0.888888888888889
+East of England,2020-12-01,10,9,0.9
+East of England,2020-12-02,15,14,0.933333333333333
+East of England,2020-12-03,8,7,0.875
+East of England,2020-12-04,16,16,1
+East of England,2020-12-05,13,12,0.923076923076923
+East of England,2020-12-06,6,5,0.833333333333333
+East of England,2020-12-07,73,70,0.958904109589041
+East of England,2020-12-08,29,25,0.862068965517241
+East of England,2020-12-09,63,61,0.968253968253968
+East of England,2020-12-10,145,142,0.979310344827586
+East of England,2020-12-11,63,62,0.984126984126984
+East of England,2020-12-12,27,26,0.962962962962963
+East of England,2020-12-13,85,83,0.976470588235294
+East of England,2020-12-14,73,72,0.986301369863014
+East of England,2020-12-15,160,158,0.9875
+East of England,2020-12-16,131,126,0.961832061068702
+East of England,2020-12-17,227,222,0.977973568281938
+East of England,2020-12-18,171,171,1
+East of England,2020-12-19,89,87,0.97752808988764
+East of England,2020-12-20,54,54,1
+East of England,2020-12-21,123,120,0.975609756097561
+East of England,2020-12-22,69,66,0.956521739130435
+East of England,2020-12-23,24,23,0.958333333333333
+East of England,2020-12-24,73,69,0.945205479452055
+East of England,2020-12-25,59,54,0.915254237288136
+East of England,2020-12-26,129,124,0.961240310077519
+East of England,2020-12-27,75,66,0.88
+East of England,2020-12-28,78,77,0.987179487179487
+East of England,2020-12-29,64,64,1
+East of England,2020-12-30,14,14,1
+East of England,2020-12-31,48,45,0.9375
+East of England,2021-01-01,7,7,1
+East of England,2021-01-02,,,1
+East of England,2021-01-03,,,1
+East of England,2021-01-04,,,1
+East of England,2021-01-05,,,1
+East of England,2021-01-06,,,1
+East of England,2021-01-07,,,1
+East of England,2021-01-08,,,1
+East of England,2021-01-09,,,1
+East of England,2021-01-10,,,1
+East of England,2021-01-11,,,1
+East of England,2021-01-12,,,1
+East of England,2021-01-13,,,1
+East of England,2021-01-14,,,1
+East of England,2021-01-15,,,1
+East of England,2021-01-16,,,1
+East of England,2021-01-17,,,1
+East of England,2021-01-18,,,1
+East of England,2021-01-19,,,1
+East of England,2021-01-20,,,1
+East of England,2021-01-21,,,1
+East of England,2021-01-22,,,1
+East of England,2021-01-23,,,1
+East of England,2021-01-24,,,1
+East of England,2021-01-25,,,1
+East of England,2021-01-26,,,1
+East of England,2021-01-27,,,1
+East of England,2021-01-28,,,1
+East of England,2021-01-29,,,1
+East of England,2021-01-30,,,1
+East of England,2021-01-31,,,1
+East of England,2021-02-01,,,1
+East of England,2021-02-02,,,1
+East of England,2021-02-03,,,1
+East of England,2021-02-04,,,1
+East of England,2021-02-05,,,1
+East of England,2021-02-06,,,1
+East of England,2021-02-07,,,1
+East of England,2021-02-08,,,1
+East of England,2021-02-09,,,1
+East of England,2021-02-10,,,1
+East of England,2021-02-11,,,1
+East of England,2021-02-12,,,1
+East of England,2021-02-13,,,1
+East of England,2021-02-14,,,1
+East of England,2021-02-15,,,1
+East of England,2021-02-16,,,1
+East of England,2021-02-17,,,1
+East of England,2021-02-18,,,1
+East of England,2021-02-19,,,1
+East of England,2021-02-20,,,1
+East of England,2021-02-21,,,1
+East of England,2021-02-22,,,1
+East of England,2021-02-23,,,1
+East of England,2021-02-24,,,1
+East of England,2021-02-25,,,1
+East of England,2021-02-26,,,1
+East of England,2021-02-27,,,1
+East of England,2021-02-28,,,1
+London,2020-09-01,4,0,0
+London,2020-09-02,6,0,0
+London,2020-09-03,5,0,0
+London,2020-09-04,1,0,0
+London,2020-09-05,1,0,0
+London,2020-09-06,0,0,0
+London,2020-09-07,3,0,0
+London,2020-09-08,2,0,0
+London,2020-09-09,1,0,0
+London,2020-09-10,5,0,0
+London,2020-09-11,0,0,0
+London,2020-09-12,0,0,0
+London,2020-09-13,0,0,0
+London,2020-09-14,12,0,0
+London,2020-09-15,1,0,0
+London,2020-09-16,1,0,0
+London,2020-09-17,7,0,0
+London,2020-09-18,2,0,0
+London,2020-09-19,3,0,0
+London,2020-09-20,5,0,0
+London,2020-09-21,4,1,0.25
+London,2020-09-22,2,0,0
+London,2020-09-23,4,0,0
+London,2020-09-24,3,0,0
+London,2020-09-25,4,0,0
+London,2020-09-26,1,0,0
+London,2020-09-27,1,0,0
+London,2020-09-28,0,0,0
+London,2020-09-29,2,0,0
+London,2020-09-30,5,0,0
+London,2020-10-01,7,1,0.142857142857143
+London,2020-10-02,1,0,0
+London,2020-10-03,0,0,0
+London,2020-10-04,1,0,0
+London,2020-10-05,2,0,0
+London,2020-10-06,6,0,0
+London,2020-10-07,3,0,0
+London,2020-10-08,2,1,0.5
+London,2020-10-09,5,0,0
+London,2020-10-10,1,0,0
+London,2020-10-11,6,0,0
+London,2020-10-12,1,0,0
+London,2020-10-13,12,0,0
+London,2020-10-14,3,0,0
+London,2020-10-15,16,0,0
+London,2020-10-16,0,0,0
+London,2020-10-17,0,0,0
+London,2020-10-18,0,0,0
+London,2020-10-19,0,0,0
+London,2020-10-20,4,0,0
+London,2020-10-21,34,0,0
+London,2020-10-22,11,1,0.0909090909090909
+London,2020-10-23,3,0,0
+London,2020-10-24,10,1,0.1
+London,2020-10-25,3,1,0.333333333333333
+London,2020-10-26,2,0,0
+London,2020-10-27,2,0,0
+London,2020-10-28,0,0,0.166666666666667
+London,2020-10-29,12,4,0.333333333333333
+London,2020-10-30,9,3,0.333333333333333
+London,2020-10-31,2,2,1
+London,2020-11-01,12,7,0.583333333333333
+London,2020-11-02,21,12,0.571428571428571
+London,2020-11-03,0,0,0.535714285714286
+London,2020-11-04,2,1,0.5
+London,2020-11-05,42,29,0.690476190476191
+London,2020-11-06,4,2,0.5
+London,2020-11-07,0,0,0.631578947368421
+London,2020-11-08,38,29,0.763157894736842
+London,2020-11-09,20,13,0.65
+London,2020-11-10,5,4,0.8
+London,2020-11-11,15,14,0.933333333333333
+London,2020-11-12,25,20,0.8
+London,2020-11-13,80,67,0.8375
+London,2020-11-14,69,56,0.811594202898551
+London,2020-11-15,32,25,0.78125
+London,2020-11-16,3,3,1
+London,2020-11-17,41,31,0.75609756097561
+London,2020-11-18,41,28,0.682926829268293
+London,2020-11-19,32,31,0.96875
+London,2020-11-20,9,7,0.777777777777778
+London,2020-11-21,35,33,0.942857142857143
+London,2020-11-22,76,72,0.947368421052632
+London,2020-11-23,8,5,0.625
+London,2020-11-24,7,5,0.714285714285714
+London,2020-11-25,2,2,1
+London,2020-11-26,36,36,1
+London,2020-11-27,39,36,0.923076923076923
+London,2020-11-28,16,16,1
+London,2020-11-29,13,12,0.923076923076923
+London,2020-11-30,9,9,1
+London,2020-12-01,3,3,1
+London,2020-12-02,22,21,0.954545454545455
+London,2020-12-03,9,9,1
+London,2020-12-04,88,83,0.943181818181818
+London,2020-12-05,34,33,0.970588235294118
+London,2020-12-06,23,22,0.956521739130435
+London,2020-12-07,81,78,0.962962962962963
+London,2020-12-08,66,57,0.863636363636364
+London,2020-12-09,12,12,1
+London,2020-12-10,522,507,0.971264367816092
+London,2020-12-11,133,127,0.954887218045113
+London,2020-12-12,65,63,0.969230769230769
+London,2020-12-13,257,254,0.988326848249027
+London,2020-12-14,123,123,1
+London,2020-12-15,243,242,0.995884773662551
+London,2020-12-16,263,263,1
+London,2020-12-17,224,223,0.995535714285714
+London,2020-12-18,370,364,0.983783783783784
+London,2020-12-19,127,124,0.976377952755906
+London,2020-12-20,95,94,0.989473684210526
+London,2020-12-21,98,97,0.989795918367347
+London,2020-12-22,49,49,1
+London,2020-12-23,61,61,1
+London,2020-12-24,80,79,0.9875
+London,2020-12-25,120,119,0.991666666666667
+London,2020-12-26,372,370,0.994623655913978
+London,2020-12-27,81,81,1
+London,2020-12-28,39,38,0.974358974358974
+London,2020-12-29,160,160,1
+London,2020-12-30,63,63,1
+London,2020-12-31,49,49,1
+London,2021-01-01,1,1,1
+London,2021-01-02,,,1
+London,2021-01-03,,,1
+London,2021-01-04,,,1
+London,2021-01-05,,,1
+London,2021-01-06,,,1
+London,2021-01-07,,,1
+London,2021-01-08,,,1
+London,2021-01-09,,,1
+London,2021-01-10,,,1
+London,2021-01-11,,,1
+London,2021-01-12,,,1
+London,2021-01-13,,,1
+London,2021-01-14,,,1
+London,2021-01-15,,,1
+London,2021-01-16,,,1
+London,2021-01-17,,,1
+London,2021-01-18,,,1
+London,2021-01-19,,,1
+London,2021-01-20,,,1
+London,2021-01-21,,,1
+London,2021-01-22,,,1
+London,2021-01-23,,,1
+London,2021-01-24,,,1
+London,2021-01-25,,,1
+London,2021-01-26,,,1
+London,2021-01-27,,,1
+London,2021-01-28,,,1
+London,2021-01-29,,,1
+London,2021-01-30,,,1
+London,2021-01-31,,,1
+London,2021-02-01,,,1
+London,2021-02-02,,,1
+London,2021-02-03,,,1
+London,2021-02-04,,,1
+London,2021-02-05,,,1
+London,2021-02-06,,,1
+London,2021-02-07,,,1
+London,2021-02-08,,,1
+London,2021-02-09,,,1
+London,2021-02-10,,,1
+London,2021-02-11,,,1
+London,2021-02-12,,,1
+London,2021-02-13,,,1
+London,2021-02-14,,,1
+London,2021-02-15,,,1
+London,2021-02-16,,,1
+London,2021-02-17,,,1
+London,2021-02-18,,,1
+London,2021-02-19,,,1
+London,2021-02-20,,,1
+London,2021-02-21,,,1
+London,2021-02-22,,,1
+London,2021-02-23,,,1
+London,2021-02-24,,,1
+London,2021-02-25,,,1
+London,2021-02-26,,,1
+London,2021-02-27,,,1
+London,2021-02-28,,,1
+Midlands,2020-09-01,0,0,0
+Midlands,2020-09-02,2,0,0
+Midlands,2020-09-03,2,0,0
+Midlands,2020-09-04,1,0,0
+Midlands,2020-09-05,0,0,0
+Midlands,2020-09-06,0,0,0
+Midlands,2020-09-07,0,0,0
+Midlands,2020-09-08,0,0,0
+Midlands,2020-09-09,2,0,0
+Midlands,2020-09-10,0,0,0
+Midlands,2020-09-11,1,0,0
+Midlands,2020-09-12,0,0,0
+Midlands,2020-09-13,0,0,0
+Midlands,2020-09-14,0,0,0
+Midlands,2020-09-15,0,0,0
+Midlands,2020-09-16,1,0,0
+Midlands,2020-09-17,1,0,0
+Midlands,2020-09-18,0,0,0
+Midlands,2020-09-19,0,0,0
+Midlands,2020-09-20,1,0,0
+Midlands,2020-09-21,8,0,0
+Midlands,2020-09-22,2,0,0
+Midlands,2020-09-23,1,0,0
+Midlands,2020-09-24,10,0,0
+Midlands,2020-09-25,3,0,0
+Midlands,2020-09-26,0,0,0
+Midlands,2020-09-27,0,0,0
+Midlands,2020-09-28,1,0,0
+Midlands,2020-09-29,0,0,0
+Midlands,2020-09-30,1,0,0
+Midlands,2020-10-01,0,0,0
+Midlands,2020-10-02,0,0,0
+Midlands,2020-10-03,0,0,0
+Midlands,2020-10-04,0,0,0
+Midlands,2020-10-05,2,0,0
+Midlands,2020-10-06,1,0,0
+Midlands,2020-10-07,1,0,0
+Midlands,2020-10-08,0,0,0
+Midlands,2020-10-09,1,0,0
+Midlands,2020-10-10,0,0,0
+Midlands,2020-10-11,0,0,0
+Midlands,2020-10-12,2,0,0
+Midlands,2020-10-13,0,0,0
+Midlands,2020-10-14,1,0,0
+Midlands,2020-10-15,1,0,0
+Midlands,2020-10-16,0,0,0
+Midlands,2020-10-17,1,0,0
+Midlands,2020-10-18,0,0,0
+Midlands,2020-10-19,0,0,0
+Midlands,2020-10-20,1,0,0
+Midlands,2020-10-21,5,1,0.2
+Midlands,2020-10-22,1,0,0
+Midlands,2020-10-23,0,0,0
+Midlands,2020-10-24,0,0,0
+Midlands,2020-10-25,1,0,0
+Midlands,2020-10-26,3,1,0.333333333333333
+Midlands,2020-10-27,0,0,0.166666666666667
+Midlands,2020-10-28,2,0,0
+Midlands,2020-10-29,3,0,0
+Midlands,2020-10-30,1,0,0
+Midlands,2020-10-31,0,0,0
+Midlands,2020-11-01,1,0,0
+Midlands,2020-11-02,3,0,0
+Midlands,2020-11-03,0,0,0
+Midlands,2020-11-04,1,0,0
+Midlands,2020-11-05,8,1,0.125
+Midlands,2020-11-06,5,1,0.2
+Midlands,2020-11-07,1,0,0
+Midlands,2020-11-08,6,2,0.333333333333333
+Midlands,2020-11-09,4,1,0.25
+Midlands,2020-11-10,1,1,1
+Midlands,2020-11-11,1,0,0
+Midlands,2020-11-12,2,1,0.5
+Midlands,2020-11-13,8,1,0.125
+Midlands,2020-11-14,6,1,0.166666666666667
+Midlands,2020-11-15,6,1,0.166666666666667
+Midlands,2020-11-16,0,0,0.283333333333333
+Midlands,2020-11-17,5,2,0.4
+Midlands,2020-11-18,15,8,0.533333333333333
+Midlands,2020-11-19,0,0,0.711111111111111
+Midlands,2020-11-20,9,8,0.888888888888889
+Midlands,2020-11-21,0,0,0.444444444444444
+Midlands,2020-11-22,1,0,0
+Midlands,2020-11-23,2,2,1
+Midlands,2020-11-24,1,1,1
+Midlands,2020-11-25,1,0,0
+Midlands,2020-11-26,3,2,0.666666666666667
+Midlands,2020-11-27,1,1,1
+Midlands,2020-11-28,0,0,0.96
+Midlands,2020-11-29,0,0,0.92
+Midlands,2020-11-30,0,0,0.88
+Midlands,2020-12-01,0,0,0.84
+Midlands,2020-12-02,5,4,0.8
+Midlands,2020-12-03,0,0,0.828571428571429
+Midlands,2020-12-04,7,6,0.857142857142857
+Midlands,2020-12-05,3,1,0.333333333333333
+Midlands,2020-12-06,8,8,1
+Midlands,2020-12-07,16,15,0.9375
+Midlands,2020-12-08,3,3,1
+Midlands,2020-12-09,18,18,1
+Midlands,2020-12-10,46,41,0.891304347826087
+Midlands,2020-12-11,5,5,1
+Midlands,2020-12-12,24,24,1
+Midlands,2020-12-13,39,35,0.897435897435897
+Midlands,2020-12-14,28,27,0.964285714285714
+Midlands,2020-12-15,19,18,0.947368421052632
+Midlands,2020-12-16,26,26,1
+Midlands,2020-12-17,44,42,0.954545454545455
+Midlands,2020-12-18,20,19,0.95
+Midlands,2020-12-19,38,38,1
+Midlands,2020-12-20,16,15,0.9375
+Midlands,2020-12-21,42,40,0.952380952380952
+Midlands,2020-12-22,17,16,0.941176470588235
+Midlands,2020-12-23,6,5,0.833333333333333
+Midlands,2020-12-24,33,33,1
+Midlands,2020-12-25,22,19,0.863636363636364
+Midlands,2020-12-26,48,43,0.895833333333333
+Midlands,2020-12-27,85,83,0.976470588235294
+Midlands,2020-12-28,15,15,1
+Midlands,2020-12-29,73,72,0.986301369863014
+Midlands,2020-12-30,19,18,0.947368421052632
+Midlands,2020-12-31,22,22,1
+Midlands,2021-01-01,0,0,1
+Midlands,2021-01-02,2,2,1
+Midlands,2021-01-03,0,0,1
+Midlands,2021-01-04,0,0,1
+Midlands,2021-01-05,2,2,1
+Midlands,2021-01-06,1,1,1
+Midlands,2021-01-07,,,1
+Midlands,2021-01-08,,,1
+Midlands,2021-01-09,,,1
+Midlands,2021-01-10,,,1
+Midlands,2021-01-11,,,1
+Midlands,2021-01-12,,,1
+Midlands,2021-01-13,,,1
+Midlands,2021-01-14,,,1
+Midlands,2021-01-15,,,1
+Midlands,2021-01-16,,,1
+Midlands,2021-01-17,,,1
+Midlands,2021-01-18,,,1
+Midlands,2021-01-19,,,1
+Midlands,2021-01-20,,,1
+Midlands,2021-01-21,,,1
+Midlands,2021-01-22,,,1
+Midlands,2021-01-23,,,1
+Midlands,2021-01-24,,,1
+Midlands,2021-01-25,,,1
+Midlands,2021-01-26,,,1
+Midlands,2021-01-27,,,1
+Midlands,2021-01-28,,,1
+Midlands,2021-01-29,,,1
+Midlands,2021-01-30,,,1
+Midlands,2021-01-31,,,1
+Midlands,2021-02-01,,,1
+Midlands,2021-02-02,,,1
+Midlands,2021-02-03,,,1
+Midlands,2021-02-04,,,1
+Midlands,2021-02-05,,,1
+Midlands,2021-02-06,,,1
+Midlands,2021-02-07,,,1
+Midlands,2021-02-08,,,1
+Midlands,2021-02-09,,,1
+Midlands,2021-02-10,,,1
+Midlands,2021-02-11,,,1
+Midlands,2021-02-12,,,1
+Midlands,2021-02-13,,,1
+Midlands,2021-02-14,,,1
+Midlands,2021-02-15,,,1
+Midlands,2021-02-16,,,1
+Midlands,2021-02-17,,,1
+Midlands,2021-02-18,,,1
+Midlands,2021-02-19,,,1
+Midlands,2021-02-20,,,1
+Midlands,2021-02-21,,,1
+Midlands,2021-02-22,,,1
+Midlands,2021-02-23,,,1
+Midlands,2021-02-24,,,1
+Midlands,2021-02-25,,,1
+Midlands,2021-02-26,,,1
+Midlands,2021-02-27,,,1
+Midlands,2021-02-28,,,1
+North East and Yorkshire,2020-09-01,0,0,0
+North East and Yorkshire,2020-09-02,0,0,0
+North East and Yorkshire,2020-09-03,0,0,0
+North East and Yorkshire,2020-09-04,0,0,0
+North East and Yorkshire,2020-09-05,0,0,0
+North East and Yorkshire,2020-09-06,0,0,0
+North East and Yorkshire,2020-09-07,0,0,0
+North East and Yorkshire,2020-09-08,0,0,0
+North East and Yorkshire,2020-09-09,2,0,0
+North East and Yorkshire,2020-09-10,1,0,0
+North East and Yorkshire,2020-09-11,2,0,0
+North East and Yorkshire,2020-09-12,0,0,0
+North East and Yorkshire,2020-09-13,0,0,0
+North East and Yorkshire,2020-09-14,2,0,0
+North East and Yorkshire,2020-09-15,0,0,0
+North East and Yorkshire,2020-09-16,2,0,0
+North East and Yorkshire,2020-09-17,0,0,0
+North East and Yorkshire,2020-09-18,0,0,0
+North East and Yorkshire,2020-09-19,0,0,0
+North East and Yorkshire,2020-09-20,0,0,0
+North East and Yorkshire,2020-09-21,1,0,0
+North East and Yorkshire,2020-09-22,0,0,0
+North East and Yorkshire,2020-09-23,0,0,0
+North East and Yorkshire,2020-09-24,1,0,0
+North East and Yorkshire,2020-09-25,1,0,0
+North East and Yorkshire,2020-09-26,0,0,0
+North East and Yorkshire,2020-09-27,1,0,0
+North East and Yorkshire,2020-09-28,0,0,0
+North East and Yorkshire,2020-09-29,1,0,0
+North East and Yorkshire,2020-09-30,0,0,0
+North East and Yorkshire,2020-10-01,9,0,0
+North East and Yorkshire,2020-10-02,2,0,0
+North East and Yorkshire,2020-10-03,3,0,0
+North East and Yorkshire,2020-10-04,1,0,0
+North East and Yorkshire,2020-10-05,5,0,0
+North East and Yorkshire,2020-10-06,2,0,0
+North East and Yorkshire,2020-10-07,10,0,0
+North East and Yorkshire,2020-10-08,3,0,0
+North East and Yorkshire,2020-10-09,2,0,0
+North East and Yorkshire,2020-10-10,2,0,0
+North East and Yorkshire,2020-10-11,1,0,0
+North East and Yorkshire,2020-10-12,3,0,0
+North East and Yorkshire,2020-10-13,1,0,0
+North East and Yorkshire,2020-10-14,4,0,0
+North East and Yorkshire,2020-10-15,4,0,0
+North East and Yorkshire,2020-10-16,2,0,0
+North East and Yorkshire,2020-10-17,5,0,0
+North East and Yorkshire,2020-10-18,1,0,0
+North East and Yorkshire,2020-10-19,3,0,0
+North East and Yorkshire,2020-10-20,5,0,0
+North East and Yorkshire,2020-10-21,0,0,0
+North East and Yorkshire,2020-10-22,6,0,0
+North East and Yorkshire,2020-10-23,6,0,0
+North East and Yorkshire,2020-10-24,2,0,0
+North East and Yorkshire,2020-10-25,0,0,0
+North East and Yorkshire,2020-10-26,3,0,0
+North East and Yorkshire,2020-10-27,2,0,0
+North East and Yorkshire,2020-10-28,0,0,0
+North East and Yorkshire,2020-10-29,2,0,0
+North East and Yorkshire,2020-10-30,11,1,0.0909090909090909
+North East and Yorkshire,2020-10-31,1,0,0
+North East and Yorkshire,2020-11-01,2,0,0
+North East and Yorkshire,2020-11-02,20,1,0.05
+North East and Yorkshire,2020-11-03,3,0,0
+North East and Yorkshire,2020-11-04,8,0,0
+North East and Yorkshire,2020-11-05,1,0,0
+North East and Yorkshire,2020-11-06,1,0,0
+North East and Yorkshire,2020-11-07,0,0,0
+North East and Yorkshire,2020-11-08,2,0,0
+North East and Yorkshire,2020-11-09,1,0,0
+North East and Yorkshire,2020-11-10,1,0,0
+North East and Yorkshire,2020-11-11,12,1,0.0833333333333333
+North East and Yorkshire,2020-11-12,1,0,0
+North East and Yorkshire,2020-11-13,0,0,0.2
+North East and Yorkshire,2020-11-14,5,2,0.4
+North East and Yorkshire,2020-11-15,0,0,0.266666666666667
+North East and Yorkshire,2020-11-16,0,0,0.133333333333333
+North East and Yorkshire,2020-11-17,1,0,0
+North East and Yorkshire,2020-11-18,14,3,0.214285714285714
+North East and Yorkshire,2020-11-19,6,0,0
+North East and Yorkshire,2020-11-20,2,0,0
+North East and Yorkshire,2020-11-21,6,0,0
+North East and Yorkshire,2020-11-22,4,3,0.75
+North East and Yorkshire,2020-11-23,5,1,0.2
+North East and Yorkshire,2020-11-24,5,0,0
+North East and Yorkshire,2020-11-25,12,4,0.333333333333333
+North East and Yorkshire,2020-11-26,12,7,0.583333333333333
+North East and Yorkshire,2020-11-27,7,4,0.571428571428571
+North East and Yorkshire,2020-11-28,3,3,1
+North East and Yorkshire,2020-11-29,2,0,0
+North East and Yorkshire,2020-11-30,11,3,0.272727272727273
+North East and Yorkshire,2020-12-01,2,0,0
+North East and Yorkshire,2020-12-02,2,1,0.5
+North East and Yorkshire,2020-12-03,1,0,0
+North East and Yorkshire,2020-12-04,1,0,0
+North East and Yorkshire,2020-12-05,4,4,1
+North East and Yorkshire,2020-12-06,10,9,0.9
+North East and Yorkshire,2020-12-07,5,5,1
+North East and Yorkshire,2020-12-08,2,1,0.5
+North East and Yorkshire,2020-12-09,0,0,0.416666666666667
+North East and Yorkshire,2020-12-10,3,1,0.333333333333333
+North East and Yorkshire,2020-12-11,71,63,0.887323943661972
+North East and Yorkshire,2020-12-12,28,24,0.857142857142857
+North East and Yorkshire,2020-12-13,10,10,1
+North East and Yorkshire,2020-12-14,28,25,0.892857142857143
+North East and Yorkshire,2020-12-15,6,6,1
+North East and Yorkshire,2020-12-16,8,8,1
+North East and Yorkshire,2020-12-17,8,8,1
+North East and Yorkshire,2020-12-18,19,17,0.894736842105263
+North East and Yorkshire,2020-12-19,2,2,1
+North East and Yorkshire,2020-12-20,67,63,0.940298507462687
+North East and Yorkshire,2020-12-21,13,12,0.923076923076923
+North East and Yorkshire,2020-12-22,25,25,1
+North East and Yorkshire,2020-12-23,28,28,1
+North East and Yorkshire,2020-12-24,22,22,1
+North East and Yorkshire,2020-12-25,0,0,1
+North East and Yorkshire,2020-12-26,40,40,1
+North East and Yorkshire,2020-12-27,39,37,0.948717948717949
+North East and Yorkshire,2020-12-28,6,6,1
+North East and Yorkshire,2020-12-29,161,161,1
+North East and Yorkshire,2020-12-30,52,52,1
+North East and Yorkshire,2020-12-31,22,22,1
+North East and Yorkshire,2021-01-01,3,3,1
+North East and Yorkshire,2021-01-02,12,12,1
+North East and Yorkshire,2021-01-03,22,22,1
+North East and Yorkshire,2021-01-04,13,13,1
+North East and Yorkshire,2021-01-05,6,5,1
+North East and Yorkshire,2021-01-06,,,1
+North East and Yorkshire,2021-01-07,,,1
+North East and Yorkshire,2021-01-08,,,1
+North East and Yorkshire,2021-01-09,,,1
+North East and Yorkshire,2021-01-10,,,1
+North East and Yorkshire,2021-01-11,,,1
+North East and Yorkshire,2021-01-12,,,1
+North East and Yorkshire,2021-01-13,,,1
+North East and Yorkshire,2021-01-14,,,1
+North East and Yorkshire,2021-01-15,,,1
+North East and Yorkshire,2021-01-16,,,1
+North East and Yorkshire,2021-01-17,,,1
+North East and Yorkshire,2021-01-18,,,1
+North East and Yorkshire,2021-01-19,,,1
+North East and Yorkshire,2021-01-20,,,1
+North East and Yorkshire,2021-01-21,,,1
+North East and Yorkshire,2021-01-22,,,1
+North East and Yorkshire,2021-01-23,,,1
+North East and Yorkshire,2021-01-24,,,1
+North East and Yorkshire,2021-01-25,,,1
+North East and Yorkshire,2021-01-26,,,1
+North East and Yorkshire,2021-01-27,,,1
+North East and Yorkshire,2021-01-28,,,1
+North East and Yorkshire,2021-01-29,,,1
+North East and Yorkshire,2021-01-30,,,1
+North East and Yorkshire,2021-01-31,,,1
+North East and Yorkshire,2021-02-01,,,1
+North East and Yorkshire,2021-02-02,,,1
+North East and Yorkshire,2021-02-03,,,1
+North East and Yorkshire,2021-02-04,,,1
+North East and Yorkshire,2021-02-05,,,1
+North East and Yorkshire,2021-02-06,,,1
+North East and Yorkshire,2021-02-07,,,1
+North East and Yorkshire,2021-02-08,,,1
+North East and Yorkshire,2021-02-09,,,1
+North East and Yorkshire,2021-02-10,,,1
+North East and Yorkshire,2021-02-11,,,1
+North East and Yorkshire,2021-02-12,,,1
+North East and Yorkshire,2021-02-13,,,1
+North East and Yorkshire,2021-02-14,,,1
+North East and Yorkshire,2021-02-15,,,1
+North East and Yorkshire,2021-02-16,,,1
+North East and Yorkshire,2021-02-17,,,1
+North East and Yorkshire,2021-02-18,,,1
+North East and Yorkshire,2021-02-19,,,1
+North East and Yorkshire,2021-02-20,,,1
+North East and Yorkshire,2021-02-21,,,1
+North East and Yorkshire,2021-02-22,,,1
+North East and Yorkshire,2021-02-23,,,1
+North East and Yorkshire,2021-02-24,,,1
+North East and Yorkshire,2021-02-25,,,1
+North East and Yorkshire,2021-02-26,,,1
+North East and Yorkshire,2021-02-27,,,1
+North East and Yorkshire,2021-02-28,,,1
+North West,2020-09-01,0,0,0
+North West,2020-09-02,0,0,0
+North West,2020-09-03,0,0,0
+North West,2020-09-04,1,0,0
+North West,2020-09-05,0,0,0
+North West,2020-09-06,0,0,0
+North West,2020-09-07,0,0,0
+North West,2020-09-08,0,0,0
+North West,2020-09-09,0,0,0
+North West,2020-09-10,1,0,0
+North West,2020-09-11,1,0,0
+North West,2020-09-12,0,0,0
+North West,2020-09-13,0,0,0
+North West,2020-09-14,0,0,0
+North West,2020-09-15,0,0,0
+North West,2020-09-16,3,0,0
+North West,2020-09-17,0,0,0
+North West,2020-09-18,0,0,0
+North West,2020-09-19,0,0,0
+North West,2020-09-20,0,0,0
+North West,2020-09-21,0,0,0
+North West,2020-09-22,0,0,0
+North West,2020-09-23,0,0,0
+North West,2020-09-24,3,0,0
+North West,2020-09-25,1,0,0
+North West,2020-09-26,0,0,0
+North West,2020-09-27,0,0,0
+North West,2020-09-28,2,0,0
+North West,2020-09-29,1,0,0
+North West,2020-09-30,0,0,0
+North West,2020-10-01,0,0,0
+North West,2020-10-02,1,0,0
+North West,2020-10-03,0,0,0
+North West,2020-10-04,0,0,0
+North West,2020-10-05,3,0,0
+North West,2020-10-06,4,0,0
+North West,2020-10-07,9,0,0
+North West,2020-10-08,2,0,0
+North West,2020-10-09,1,0,0
+North West,2020-10-10,0,0,0
+North West,2020-10-11,0,0,0
+North West,2020-10-12,5,0,0
+North West,2020-10-13,0,0,0
+North West,2020-10-14,3,0,0
+North West,2020-10-15,4,0,0
+North West,2020-10-16,1,0,0
+North West,2020-10-17,1,0,0
+North West,2020-10-18,0,0,0
+North West,2020-10-19,1,0,0
+North West,2020-10-20,1,0,0
+North West,2020-10-21,0,0,0
+North West,2020-10-22,4,0,0
+North West,2020-10-23,0,0,0
+North West,2020-10-24,0,0,0
+North West,2020-10-25,0,0,0
+North West,2020-10-26,0,0,0
+North West,2020-10-27,3,0,0
+North West,2020-10-28,0,0,0
+North West,2020-10-29,0,0,0
+North West,2020-10-30,0,0,0
+North West,2020-10-31,0,0,0
+North West,2020-11-01,10,0,0
+North West,2020-11-02,1,0,0
+North West,2020-11-03,0,0,0
+North West,2020-11-04,2,0,0
+North West,2020-11-05,0,0,0.5
+North West,2020-11-06,1,1,1
+North West,2020-11-07,3,0,0
+North West,2020-11-08,2,1,0.5
+North West,2020-11-09,1,1,1
+North West,2020-11-10,2,0,0
+North West,2020-11-11,0,0,0.5
+North West,2020-11-12,1,1,1
+North West,2020-11-13,0,0,0.666666666666667
+North West,2020-11-14,3,1,0.333333333333333
+North West,2020-11-15,4,1,0.25
+North West,2020-11-16,0,0,0.2
+North West,2020-11-17,0,0,0.15
+North West,2020-11-18,0,0,0.1
+North West,2020-11-19,0,0,0.05
+North West,2020-11-20,1,0,0
+North West,2020-11-21,3,2,0.666666666666667
+North West,2020-11-22,0,0,0.433333333333333
+North West,2020-11-23,5,1,0.2
+North West,2020-11-24,0,0,0.1
+North West,2020-11-25,1,0,0
+North West,2020-11-26,0,0,0.166666666666667
+North West,2020-11-27,0,0,0.333333333333333
+North West,2020-11-28,0,0,0.5
+North West,2020-11-29,0,0,0.666666666666667
+North West,2020-11-30,0,0,0.833333333333333
+North West,2020-12-01,1,1,1
+North West,2020-12-02,0,0,1
+North West,2020-12-03,1,1,1
+North West,2020-12-04,5,5,1
+North West,2020-12-05,2,2,1
+North West,2020-12-06,6,4,0.666666666666667
+North West,2020-12-07,1,1,1
+North West,2020-12-08,2,2,1
+North West,2020-12-09,9,8,0.888888888888889
+North West,2020-12-10,16,14,0.875
+North West,2020-12-11,3,3,1
+North West,2020-12-12,3,3,1
+North West,2020-12-13,7,7,1
+North West,2020-12-14,21,20,0.952380952380952
+North West,2020-12-15,4,4,1
+North West,2020-12-16,5,5,1
+North West,2020-12-17,22,21,0.954545454545455
+North West,2020-12-18,7,7,1
+North West,2020-12-19,25,25,1
+North West,2020-12-20,34,34,1
+North West,2020-12-21,86,83,0.965116279069768
+North West,2020-12-22,0,0,0.976744186046512
+North West,2020-12-23,0,0,0.988372093023256
+North West,2020-12-24,1,1,1
+North West,2020-12-25,1,1,1
+North West,2020-12-26,10,10,1
+North West,2020-12-27,110,110,1
+North West,2020-12-28,66,66,1
+North West,2020-12-29,29,29,1
+North West,2020-12-30,53,52,0.981132075471698
+North West,2020-12-31,27,27,1
+North West,2021-01-01,18,18,1
+North West,2021-01-02,10,9,1
+North West,2021-01-03,5,5,1
+North West,2021-01-04,1,1,1
+North West,2021-01-05,,,1
+North West,2021-01-06,,,1
+North West,2021-01-07,,,1
+North West,2021-01-08,,,1
+North West,2021-01-09,,,1
+North West,2021-01-10,,,1
+North West,2021-01-11,,,1
+North West,2021-01-12,,,1
+North West,2021-01-13,,,1
+North West,2021-01-14,,,1
+North West,2021-01-15,,,1
+North West,2021-01-16,,,1
+North West,2021-01-17,,,1
+North West,2021-01-18,,,1
+North West,2021-01-19,,,1
+North West,2021-01-20,,,1
+North West,2021-01-21,,,1
+North West,2021-01-22,,,1
+North West,2021-01-23,,,1
+North West,2021-01-24,,,1
+North West,2021-01-25,,,1
+North West,2021-01-26,,,1
+North West,2021-01-27,,,1
+North West,2021-01-28,,,1
+North West,2021-01-29,,,1
+North West,2021-01-30,,,1
+North West,2021-01-31,,,1
+North West,2021-02-01,,,1
+North West,2021-02-02,,,1
+North West,2021-02-03,,,1
+North West,2021-02-04,,,1
+North West,2021-02-05,,,1
+North West,2021-02-06,,,1
+North West,2021-02-07,,,1
+North West,2021-02-08,,,1
+North West,2021-02-09,,,1
+North West,2021-02-10,,,1
+North West,2021-02-11,,,1
+North West,2021-02-12,,,1
+North West,2021-02-13,,,1
+North West,2021-02-14,,,1
+North West,2021-02-15,,,1
+North West,2021-02-16,,,1
+North West,2021-02-17,,,1
+North West,2021-02-18,,,1
+North West,2021-02-19,,,1
+North West,2021-02-20,,,1
+North West,2021-02-21,,,1
+North West,2021-02-22,,,1
+North West,2021-02-23,,,1
+North West,2021-02-24,,,1
+North West,2021-02-25,,,1
+North West,2021-02-26,,,1
+North West,2021-02-27,,,1
+North West,2021-02-28,,,1
+South East,2020-09-01,2,0,0
+South East,2020-09-02,0,0,0
+South East,2020-09-03,1,0,0
+South East,2020-09-04,0,0,0
+South East,2020-09-05,0,0,0
+South East,2020-09-06,,,0
+South East,2020-09-07,2,0,0
+South East,2020-09-08,0,0,0
+South East,2020-09-09,3,0,0
+South East,2020-09-10,4,0,0
+South East,2020-09-11,1,0,0
+South East,2020-09-12,0,0,0
+South East,2020-09-13,0,0,0
+South East,2020-09-14,2,0,0
+South East,2020-09-15,0,0,0
+South East,2020-09-16,0,0,0
+South East,2020-09-17,0,0,0
+South East,2020-09-18,1,0,0
+South East,2020-09-19,2,0,0
+South East,2020-09-20,2,1,0.5
+South East,2020-09-21,1,0,0
+South East,2020-09-22,3,0,0
+South East,2020-09-23,2,0,0
+South East,2020-09-24,3,0,0
+South East,2020-09-25,2,0,0
+South East,2020-09-26,1,0,0
+South East,2020-09-27,0,0,0
+South East,2020-09-28,0,0,0
+South East,2020-09-29,2,0,0
+South East,2020-09-30,2,2,1
+South East,2020-10-01,5,0,0
+South East,2020-10-02,2,0,0
+South East,2020-10-03,1,0,0
+South East,2020-10-04,2,0,0
+South East,2020-10-05,0,0,0
+South East,2020-10-06,1,0,0
+South East,2020-10-07,1,0,0
+South East,2020-10-08,4,0,0
+South East,2020-10-09,1,0,0
+South East,2020-10-10,0,0,0.214285714285714
+South East,2020-10-11,7,3,0.428571428571429
+South East,2020-10-12,0,0,0.214285714285714
+South East,2020-10-13,5,0,0
+South East,2020-10-14,0,0,0.166666666666667
+South East,2020-10-15,6,2,0.333333333333333
+South East,2020-10-16,1,0,0
+South East,2020-10-17,0,0,0
+South East,2020-10-18,0,0,0
+South East,2020-10-19,0,0,0
+South East,2020-10-20,3,0,0
+South East,2020-10-21,19,13,0.68421052631579
+South East,2020-10-22,13,6,0.461538461538462
+South East,2020-10-23,7,6,0.857142857142857
+South East,2020-10-24,8,4,0.5
+South East,2020-10-25,0,0,0.5
+South East,2020-10-26,2,1,0.5
+South East,2020-10-27,0,0,0.619047619047619
+South East,2020-10-28,0,0,0.738095238095238
+South East,2020-10-29,14,12,0.857142857142857
+South East,2020-10-30,4,2,0.5
+South East,2020-10-31,0,0,0.65
+South East,2020-11-01,10,8,0.8
+South East,2020-11-02,14,13,0.928571428571429
+South East,2020-11-03,2,2,1
+South East,2020-11-04,0,0,0.959183673469388
+South East,2020-11-05,49,45,0.918367346938776
+South East,2020-11-06,10,10,1
+South East,2020-11-07,0,0,0.935483870967742
+South East,2020-11-08,62,54,0.870967741935484
+South East,2020-11-09,11,8,0.727272727272727
+South East,2020-11-10,9,7,0.777777777777778
+South East,2020-11-11,19,19,1
+South East,2020-11-12,49,47,0.959183673469388
+South East,2020-11-13,77,72,0.935064935064935
+South East,2020-11-14,57,52,0.912280701754386
+South East,2020-11-15,43,43,1
+South East,2020-11-16,0,0,0.990740740740741
+South East,2020-11-17,54,53,0.981481481481481
+South East,2020-11-18,52,45,0.865384615384615
+South East,2020-11-19,16,13,0.8125
+South East,2020-11-20,9,9,1
+South East,2020-11-21,41,41,1
+South East,2020-11-22,123,123,1
+South East,2020-11-23,1,1,1
+South East,2020-11-24,1,1,1
+South East,2020-11-25,2,2,1
+South East,2020-11-26,36,36,1
+South East,2020-11-27,32,32,1
+South East,2020-11-28,43,42,0.976744186046512
+South East,2020-11-29,27,26,0.962962962962963
+South East,2020-11-30,12,12,1
+South East,2020-12-01,0,0,1
+South East,2020-12-02,8,8,1
+South East,2020-12-03,21,21,1
+South East,2020-12-04,40,40,1
+South East,2020-12-05,29,29,1
+South East,2020-12-06,8,8,1
+South East,2020-12-07,105,105,1
+South East,2020-12-08,94,92,0.978723404255319
+South East,2020-12-09,38,37,0.973684210526316
+South East,2020-12-10,217,212,0.976958525345622
+South East,2020-12-11,72,69,0.958333333333333
+South East,2020-12-12,82,81,0.987804878048781
+South East,2020-12-13,141,138,0.978723404255319
+South East,2020-12-14,66,66,1
+South East,2020-12-15,152,149,0.980263157894737
+South East,2020-12-16,135,135,1
+South East,2020-12-17,222,219,0.986486486486486
+South East,2020-12-18,259,257,0.992277992277992
+South East,2020-12-19,147,147,1
+South East,2020-12-20,80,78,0.975
+South East,2020-12-21,104,102,0.980769230769231
+South East,2020-12-22,38,38,1
+South East,2020-12-23,25,25,1
+South East,2020-12-24,67,67,1
+South East,2020-12-25,5,5,1
+South East,2020-12-26,144,144,1
+South East,2020-12-27,44,44,1
+South East,2020-12-28,45,43,0.955555555555556
+South East,2020-12-29,77,77,1
+South East,2020-12-30,53,53,1
+South East,2020-12-31,26,24,0.923076923076923
+South East,2021-01-01,1,0,1
+South East,2021-01-02,,,1
+South East,2021-01-03,,,1
+South East,2021-01-04,,,1
+South East,2021-01-05,,,1
+South East,2021-01-06,,,1
+South East,2021-01-07,,,1
+South East,2021-01-08,,,1
+South East,2021-01-09,,,1
+South East,2021-01-10,,,1
+South East,2021-01-11,,,1
+South East,2021-01-12,,,1
+South East,2021-01-13,,,1
+South East,2021-01-14,,,1
+South East,2021-01-15,,,1
+South East,2021-01-16,,,1
+South East,2021-01-17,,,1
+South East,2021-01-18,,,1
+South East,2021-01-19,,,1
+South East,2021-01-20,,,1
+South East,2021-01-21,,,1
+South East,2021-01-22,,,1
+South East,2021-01-23,,,1
+South East,2021-01-24,,,1
+South East,2021-01-25,,,1
+South East,2021-01-26,,,1
+South East,2021-01-27,,,1
+South East,2021-01-28,,,1
+South East,2021-01-29,,,1
+South East,2021-01-30,,,1
+South East,2021-01-31,,,1
+South East,2021-02-01,,,1
+South East,2021-02-02,,,1
+South East,2021-02-03,,,1
+South East,2021-02-04,,,1
+South East,2021-02-05,,,1
+South East,2021-02-06,,,1
+South East,2021-02-07,,,1
+South East,2021-02-08,,,1
+South East,2021-02-09,,,1
+South East,2021-02-10,,,1
+South East,2021-02-11,,,1
+South East,2021-02-12,,,1
+South East,2021-02-13,,,1
+South East,2021-02-14,,,1
+South East,2021-02-15,,,1
+South East,2021-02-16,,,1
+South East,2021-02-17,,,1
+South East,2021-02-18,,,1
+South East,2021-02-19,,,1
+South East,2021-02-20,,,1
+South East,2021-02-21,,,1
+South East,2021-02-22,,,1
+South East,2021-02-23,,,1
+South East,2021-02-24,,,1
+South East,2021-02-25,,,1
+South East,2021-02-26,,,1
+South East,2021-02-27,,,1
+South East,2021-02-28,,,1
+South West,2020-09-01,2,0,0
+South West,2020-09-02,1,0,0
+South West,2020-09-03,0,0,0
+South West,2020-09-04,1,0,0
+South West,2020-09-05,1,0,0
+South West,2020-09-06,0,0,0
+South West,2020-09-07,1,0,0
+South West,2020-09-08,0,0,0
+South West,2020-09-09,0,0,0
+South West,2020-09-10,2,0,0
+South West,2020-09-11,0,0,0
+South West,2020-09-12,0,0,0
+South West,2020-09-13,1,0,0
+South West,2020-09-14,0,0,0
+South West,2020-09-15,0,0,0
+South West,2020-09-16,1,0,0
+South West,2020-09-17,0,0,0
+South West,2020-09-18,0,0,0
+South West,2020-09-19,2,0,0
+South West,2020-09-20,2,0,0
+South West,2020-09-21,0,0,0
+South West,2020-09-22,0,0,0
+South West,2020-09-23,4,0,0
+South West,2020-09-24,0,0,0
+South West,2020-09-25,4,0,0
+South West,2020-09-26,0,0,0
+South West,2020-09-27,0,0,0
+South West,2020-09-28,0,0,0
+South West,2020-09-29,1,0,0
+South West,2020-09-30,0,0,0
+South West,2020-10-01,1,0,0
+South West,2020-10-02,0,0,0
+South West,2020-10-03,2,0,0
+South West,2020-10-04,2,0,0
+South West,2020-10-05,2,0,0
+South West,2020-10-06,5,0,0
+South West,2020-10-07,0,0,0
+South West,2020-10-08,0,0,0
+South West,2020-10-09,3,0,0
+South West,2020-10-10,0,0,0
+South West,2020-10-11,3,0,0
+South West,2020-10-12,1,0,0
+South West,2020-10-13,1,0,0
+South West,2020-10-14,1,0,0
+South West,2020-10-15,0,0,0
+South West,2020-10-16,1,0,0
+South West,2020-10-17,0,0,0
+South West,2020-10-18,0,0,0
+South West,2020-10-19,0,0,0
+South West,2020-10-20,2,0,0
+South West,2020-10-21,0,0,0
+South West,2020-10-22,1,0,0
+South West,2020-10-23,0,0,0
+South West,2020-10-24,4,0,0
+South West,2020-10-25,0,0,0
+South West,2020-10-26,1,0,0
+South West,2020-10-27,1,0,0
+South West,2020-10-28,0,0,0
+South West,2020-10-29,1,0,0
+South West,2020-10-30,1,0,0
+South West,2020-10-31,0,0,0
+South West,2020-11-01,3,0,0
+South West,2020-11-02,6,0,0
+South West,2020-11-03,1,0,0
+South West,2020-11-04,1,0,0
+South West,2020-11-05,0,0,0
+South West,2020-11-06,0,0,0
+South West,2020-11-07,0,0,0
+South West,2020-11-08,2,0,0
+South West,2020-11-09,0,0,0
+South West,2020-11-10,0,0,0
+South West,2020-11-11,1,0,0
+South West,2020-11-12,3,1,0.333333333333333
+South West,2020-11-13,1,1,1
+South West,2020-11-14,7,6,0.857142857142857
+South West,2020-11-15,0,0,0.767857142857143
+South West,2020-11-16,0,0,0.678571428571429
+South West,2020-11-17,0,0,0.589285714285714
+South West,2020-11-18,2,1,0.5
+South West,2020-11-19,0,0,0.75
+South West,2020-11-20,1,1,1
+South West,2020-11-21,0,0,1
+South West,2020-11-22,3,3,1
+South West,2020-11-23,0,0,1
+South West,2020-11-24,,,1
+South West,2020-11-25,,,1
+South West,2020-11-26,0,0,1
+South West,2020-11-27,0,0,1
+South West,2020-11-28,1,1,1
+South West,2020-11-29,,,1
+South West,2020-11-30,0,0,1
+South West,2020-12-01,0,0,1
+South West,2020-12-02,4,4,1
+South West,2020-12-03,1,1,1
+South West,2020-12-04,3,3,1
+South West,2020-12-05,1,1,1
+South West,2020-12-06,2,2,1
+South West,2020-12-07,0,0,0.916666666666667
+South West,2020-12-08,6,5,0.833333333333333
+South West,2020-12-09,2,2,1
+South West,2020-12-10,13,13,1
+South West,2020-12-11,2,1,0.5
+South West,2020-12-12,4,4,1
+South West,2020-12-13,3,3,1
+South West,2020-12-14,3,2,0.666666666666667
+South West,2020-12-15,5,5,1
+South West,2020-12-16,11,11,1
+South West,2020-12-17,22,22,1
+South West,2020-12-18,18,18,1
+South West,2020-12-19,7,7,1
+South West,2020-12-20,27,27,1
+South West,2020-12-21,19,17,0.894736842105263
+South West,2020-12-22,2,2,1
+South West,2020-12-23,4,4,1
+South West,2020-12-24,10,8,0.8
+South West,2020-12-25,1,1,1
+South West,2020-12-26,5,5,1
+South West,2020-12-27,31,31,1
+South West,2020-12-28,9,9,1
+South West,2020-12-29,6,6,1
+South West,2020-12-30,8,8,1
+South West,2020-12-31,3,3,1
+South West,2021-01-01,,,1
+South West,2021-01-02,,,1
+South West,2021-01-03,,,1
+South West,2021-01-04,,,1
+South West,2021-01-05,,,1
+South West,2021-01-06,,,1
+South West,2021-01-07,,,1
+South West,2021-01-08,,,1
+South West,2021-01-09,,,1
+South West,2021-01-10,,,1
+South West,2021-01-11,,,1
+South West,2021-01-12,,,1
+South West,2021-01-13,,,1
+South West,2021-01-14,,,1
+South West,2021-01-15,,,1
+South West,2021-01-16,,,1
+South West,2021-01-17,,,1
+South West,2021-01-18,,,1
+South West,2021-01-19,,,1
+South West,2021-01-20,,,1
+South West,2021-01-21,,,1
+South West,2021-01-22,,,1
+South West,2021-01-23,,,1
+South West,2021-01-24,,,1
+South West,2021-01-25,,,1
+South West,2021-01-26,,,1
+South West,2021-01-27,,,1
+South West,2021-01-28,,,1
+South West,2021-01-29,,,1
+South West,2021-01-30,,,1
+South West,2021-01-31,,,1
+South West,2021-02-01,,,1
+South West,2021-02-02,,,1
+South West,2021-02-03,,,1
+South West,2021-02-04,,,1
+South West,2021-02-05,,,1
+South West,2021-02-06,,,1
+South West,2021-02-07,,,1
+South West,2021-02-08,,,1
+South West,2021-02-09,,,1
+South West,2021-02-10,,,1
+South West,2021-02-11,,,1
+South West,2021-02-12,,,1
+South West,2021-02-13,,,1
+South West,2021-02-14,,,1
+South West,2021-02-15,,,1
+South West,2021-02-16,,,1
+South West,2021-02-17,,,1
+South West,2021-02-18,,,1
+South West,2021-02-19,,,1
+South West,2021-02-20,,,1
+South West,2021-02-21,,,1
+South West,2021-02-22,,,1
+South West,2021-02-23,,,1
+South West,2021-02-24,,,1
+South West,2021-02-25,,,1
+South West,2021-02-26,,,1
+South West,2021-02-27,,,1
+South West,2021-02-28,,,1
