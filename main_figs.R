@@ -1,51 +1,75 @@
+library(writexl)
+
 # Fig. 1
 # Requires plots from: survival.R, kaplan_meier.R, death_rates.R.
-
-# pl_fig1_old = plot_grid(
-#     plot_grid(
-#         plot_grid(
-#             plot_grid(plot_samples, plot_deaths, ncol = 1, labels = letters, label_size = 10, align = "v", axis = "bottom"),
-#             plAA60_both, 
-#             plBB60_both, 
-#             plCC60_both, 
-#             nrow = 2, labels = c("", letters[3:5]), label_size = 10)
-#     ),
-#     pl_deathrates_sgtf,
-#     nrow = 1,
-#     rel_widths = c(1, 0.9)
-# )
 
 pl_fig1 = plot_grid(
     plot_grid(
         plot_grid(
             plot_samples, 
             plot_deaths, 
-            ncol = 1, labels = letters, label_size = 10, align = "v", axis = "bottom"
+            ncol = 1, labels = letters, label_size = 11, align = "v", axis = "bottom"
         ),
         plAA60_both, 
-        ncol = 1, rel_heights = c(0.8, 1), labels = c("", "c"), label_size = 10
+        ncol = 1, rel_heights = c(1, 1), labels = c("", "c"), label_size = 11
     ),
     pl_deathrates_sgtf,
     nrow = 1,
     rel_widths = c(0.5, 1)
 )
 
-ggsave("./output/fig1.png", pl_fig1, width = 40, height = 20, units = "cm")
-ggsave("./output/fig1.pdf", pl_fig1, width = 40, height = 20, units = "cm", useDingbats = FALSE)
+ggsave("./output/fig1.pdf", pl_fig1, width = 30, height = 18, units = "cm", useDingbats = FALSE)
+ggsave("./output/fig1.png", pl_fig1, width = 30, height = 18, units = "cm")
+
+# Write source data
+write_xlsx(
+    list(
+        `Fig 1a` = plot_samples$data,
+        `Fig 1b` = plot_deaths$data,
+        `Fig 1c` = plAA60_inset$data,
+        `Fig 1d` = rbind(pla$layers[[1]]$data, pla$layers[[3]]$data, fill = TRUE),
+        `Fig 1e` = rbind(plb$layers[[1]]$data, plb$layers[[3]]$data, fill = TRUE),
+        `Fig 1f` = rbind(plc$layers[[1]]$data, plc$layers[[3]]$data, fill = TRUE),
+        `Fig 1g` = rbind(pld$layers[[1]]$data, pld$layers[[3]]$data, fill = TRUE),
+        `Fig 1h` = rbind(ple$layers[[1]]$data, ple$layers[[3]]$data, fill = TRUE),
+        `Fig 1i` = rbind(plf$layers[[1]]$data, plf$layers[[3]]$data, fill = TRUE)
+    ), "./manuscript/sd1.xlsx")
 
 
 
 # Fig. 2
 # Requires plots from survival.R
 
+library(Cairo)
+
 pl_fig2 = plot_grid(
-    plot_grid(hp_sgtf_cc, hp_voc_cc, hp_sgtf_ipw, hp_voc_ipw, ncol = 1, labels = letters[1:4], label_size = 10, align = "hv"),
-    pl_sensitivity, labels = c("", letters[5]), label_size = 10, nrow = 1, rel_widths = c(10, 20)
+    plot_grid(
+        hp_sgtf_cc + annotate("text", x = 28, y = 0.25, hjust = 1, vjust = 0.5, 
+            label = "list(SGTF,complete~cases)", parse = TRUE, size = 9/ggplot2:::.pt) + labs(x = NULL) + ylim(c(0, 3.1)), 
+        hp_sgtf_ipw + annotate("text", x = 28, y = 0.25, hjust = 1, vjust = 0.5, 
+            label = "list(SGTF,IPW)", parse = TRUE, size = 9/ggplot2:::.pt) + labs(x = NULL) + ylim(c(0, 3.1)), 
+        hp_voc_cc + annotate("text", x = 28, y = 0.25, hjust = 1, vjust = 0.5, 
+            label = "list(p[VOC],complete~cases)", parse = TRUE, size = 9/ggplot2:::.pt) + labs(x = NULL) + ylim(c(0, 3.1)), 
+        hp_voc_ipw + annotate("text", x = 28, y = 0.25, hjust = 1, vjust = 0.5, 
+            label = "list(p[VOC],IPW)", parse = TRUE, size = 9/ggplot2:::.pt) + labs(x = NULL) + ylim(c(0, 3.1)), 
+        nrow = 1, labels = letters[1:4], label_size = 11, align = "h", rel_widths = c(1.09, 1, 1, 1), label_x = c(0, -0.05, -0.05, -0.05)),
+    ggdraw() + annotate("text", x = 0.52, y = 1, label = "Days since positive test", size = 11/ggplot2:::.pt),
+    pl_sensitivity, labels = c("", "", letters[5]), label_size = 11, nrow = 3, rel_heights = c(3.8, 0.2, 25)
 )
 
-#ggsave("./output/fig2.pdf", pl_fig2, width = 30, height = 25, units = "cm", useDingbats = FALSE)
-ggsave("./output/fig2.png", pl_fig2, width = 30, height = 25, units = "cm")
+ggsave("./output/fig2.pdf", pl_fig2, width = 20, height = 29, units = "cm", device = cairo_pdf)
+ggsave("./output/fig2.png", pl_fig2, width = 20, height = 29, units = "cm")
 
+# Write source data
+data2e = fread("./output/table_sensitivity_effects.csv")
+write_xlsx(
+    list(
+        `Fig 2a` = hp_sgtf_cc$data,
+        `Fig 2b` = hp_sgtf_ipw$data,
+        `Fig 2c` = hp_voc_cc$data,
+        `Fig 2d` = hp_voc_ipw$data,
+        `Fig 2e` = data2e
+    ), "./manuscript/sd2.xlsx")
 
 
 # Viral load

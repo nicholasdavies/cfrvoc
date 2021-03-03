@@ -99,7 +99,7 @@ build_model = function(data, falsepos)
 }
 
 # Load data
-sgtf = sgtf_counts("20210205", "NHSER_name")[group != ""]
+sgtf = sgtf_counts("20210225", "NHSER_name")[group != ""]
 
 # Shared slope model
 sgtf_model = build_model(sgtf, "B 1.5 15")
@@ -234,6 +234,7 @@ ggplot(ww) +
 
 ggsave("./output/misclassification.pdf", width = 20, height = 15, units = "cm", useDingbats = FALSE)
 ggsave("./output/misclassification.png", width = 20, height = 15, units = "cm")
+write_xlsx(list(misclassification = ww), "./manuscript/sdE_misclassification.xlsx")
 
 # Avoid chopping off parts of the plot
 ww2 = copy(ww)

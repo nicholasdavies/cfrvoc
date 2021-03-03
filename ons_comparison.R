@@ -5,6 +5,8 @@ library(ggplot2)
 library(lubridate)
 library(stringr)
 library(ogwrangler)
+library(writexl)
+library(cowplot)
 CreateCache()
 
 source("./phe_data.R")
@@ -29,7 +31,7 @@ ukpop = rbind(ukpopf, ukpopm)
 ukpop = ukpop[order(lad, age, sex)]
 
 # Load Pillar 2 data
-pillar2 = sgtf_counts("20210201", c("age5", "sex", "LTLA_code", "cat"), criterion = "ONS")
+pillar2 = sgtf_counts("20210225", c("age5", "sex", "LTLA_code", "cat"), criterion = "ONS")
 pillar2[, c("age", "sex", "LTLA_code", "cat") := tstrsplit(group, "\\|")]
 
 # Keep only residential accommodation, samples from Nov 30 on, samples with information
@@ -50,9 +52,8 @@ pillar2 = pillar2[!is.na(pop)]
 
 pillar2 = pillar2[, .(sgtf_ct = weighted.mean(sgtf / (sgtf + other), pop, na.rm = T)), keyby = .(geo = region, specimen_date)]
 
-# Load new variant compatible modelled data for countries of the UK and for regions of England
-ons_c = as.data.table(read_excel("~/Dropbox/uk_covid_data/ons-cis/covid19infectionsurveydatasets2021012928012021212458.xlsx", "6c", "A5:AK49", na = "N/A"));
-ons_r = as.data.table(read_excel("~/Dropbox/uk_covid_data/ons-cis/covid19infectionsurveydatasets2021012928012021212458.xlsx", "6d", "A5:CD49", na = "N/A"));
+# Load new variant compatible modelled data for regions of England
+ons_r = as.data.table(read_excel("./data/covid19infectionsurveydatasets2021012928012021212458.xlsx", "6d", "A5:CD49", na = "N/A"));
 
 # Reshape ONS data into long format
 reformat_ons = function(ons_c)
@@ -85,33 +86,7 @@ reformat_ons = function(ons_c)
     return (output[])
 }
 
-approx_quotient = function(mu.a, lo.a, hi.a, mu.b, lo.b, hi.b)
-{
-    sd.a = (hi.a - lo.a) / (1.96 * 2)
-    sd.b = (hi.b - lo.b) / (1.96 * 2)
-
-    var.c = (mu.a^2 / mu.b^2) * (sd.a^2 / mu.a^2 + sd.b^2 / mu.b^2)
-    sd.c = sqrt(var.c)
-    mu.c = mu.a / mu.b
-    
-    return (list(mean.q = mu.c, lo.q = mu.c - 1.96 * sd.c, hi.q = mu.c + 1.96 * sd.c))
-}
-
 approx_frac = function(mu.a, lo.a, hi.a, mu.b, lo.b, hi.b)
-{
-    mu.ab = mu.a + mu.b
-    
-    sd.a = (hi.a - lo.a) / (1.96 * 2)
-    sd.b = (hi.b - lo.b) / (1.96 * 2)
-    
-    var.ab = sd.a^2 + sd.b^2
-    sd.ab = sqrt(var.ab)
-    
-    approx_quotient(mu.a, lo.a, hi.a, mu.ab, mu.ab - 1.96 * sd.ab, mu.ab + 1.96 * sd.ab)
-}
-
-
-approx_frac_2 = function(mu.a, lo.a, hi.a, mu.b, lo.b, hi.b)
 {
     sd.a = (hi.a - lo.a) / (1.96 * 2)
     sd.b = (hi.b - lo.b) / (1.96 * 2)
@@ -124,36 +99,20 @@ approx_frac_2 = function(mu.a, lo.a, hi.a, mu.b, lo.b, hi.b)
 }
 
 
-#w = reformat_ons(ons_c)
 w = reformat_ons(ons_r)
-w[, c("mean.frac", "lo.frac", "hi.frac") := approx_frac_2(mean.sgtf, lo.sgtf, hi.sgtf, mean.other, lo.other, hi.other), by = .(date, geo)]
+w[, c("mean.frac", "lo.frac", "hi.frac") := approx_frac(mean.sgtf, lo.sgtf, hi.sgtf, mean.other, lo.other, hi.other), by = .(date, geo)]
+
+theme_set(theme_cowplot(font_size = 11) + theme(strip.background = element_blank()))
 
 ggplot(w) +
-    #geom_ribbon(data = pillar2, aes(x = specimen_date, ymin = sgtf_lo, ymax = sgtf_hi, fill = "Pillar 2"), alpha = 0.4) +
     geom_pointrange(aes(x = date, y = mean.frac,  ymin = lo.frac, ymax = hi.frac, colour = "ONS"), fatten = 0.1) +
-    #geom_linerange(data = pillar2, aes(xmin = specimen_week, xmax = specimen_week + 7, y = sgtf_ct, colour = "Pillar 2")) +
     geom_line(data = pillar2, aes(x = specimen_date, y = sgtf_ct, colour = "Pillar 2")) +
     labs(colour = NULL, x = "Date", y = "Fraction ORF1ab + N : ORF1ab + N + S") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     facet_wrap(~geo)
 
-ggsave("./output/ons_comparison.png", width = 20, height = 15, units = "cm")
+ww = merge(w[, .(specimen_date = date, mean.ons = mean.frac, lo.ons = lo.frac, hi.ons = hi.frac, geo)], 
+    pillar2[, .(geo, specimen_date, mean.pillar2 = sgtf_ct)], by = c("geo", "specimen_date"), all = TRUE)
 
-# p from phe_data.R
-p = p[specimen_date >= "2020-11-22"]
-p[, sgtf_frac := sgtf / (other + sgtf)]
-p0 = p0[specimen_date >= "2020-11-22"]
-p0[, sgtf_frac := sgtf / (other + sgtf)]
-
-w[, point.sgtf := mean.sgtf / (mean.other + mean.sgtf)]
-
-ggplot(w) +
-    geom_pointrange(aes(x = date, y = mean.frac, ymin = lo.frac, ymax = hi.frac, colour = "ONS"), fatten = 0.1) +
-    geom_line(data = p, aes(x = specimen_date, y = sgtf_frac, colour = "Pillar 2")) +
-    facet_wrap(~geo) +
-    labs(y = "Proportion SGTF") +
-    theme(panel.background = element_rect(fill = "#f4f4f4"))
-
-
-lapply(w, class)
-ons_c
+ggsave("./output/ons_comparison.pdf", width = 20, height = 15, units = "cm", useDingbats = FALSE)
+write_xlsx(ww, "./manuscript/sdE_ons_comparison.xlsx")

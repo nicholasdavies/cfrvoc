@@ -1,12 +1,12 @@
 library(KMunicate)
 
-# This is just the original KMunicate function, adding .ylim, .margin, .title and .align arguments.
+# This is just the original KMunicate function, adding .legend_position, .xlim, .ylim, .margin, .title and .align arguments.
 KMunicate2 = function (fit, time_scale, .risk_table = "KMunicate", .reverse = FALSE, 
     .theme = NULL, .color_scale = NULL, .fill_scale = NULL, .linetype_scale = NULL, 
     .annotate = NULL, .xlab = "Time", .ylab = ifelse(.reverse, 
         "Estimated (1 - survival)", "Estimated survival"), .alpha = 0.25, 
     .rel_heights = NULL, .ff = NULL, .risk_table_base_size = 11, 
-    .size = NULL, .legend_position = c(1, 1), .ylim = c(0, 1), .margin = 0, .title = NULL, .align = "hv") 
+    .size = NULL, .legend_position = c(1, 1), .xlim = NULL, .ylim = c(0, 1), .margin = 0, .title = NULL, .align = "hv") 
 {
     arg_checks <- checkmate::makeAssertCollection()
     checkmate::assert_class(x = fit, classes = "survfit", add = arg_checks)
@@ -81,7 +81,7 @@ KMunicate2 = function (fit, time_scale, .risk_table = "KMunicate", .reverse = FA
         plot <- plot + ggplot2::geom_step()
     }
     plot <- plot + ggplot2::scale_x_continuous(breaks = time_scale) + 
-        ggplot2::coord_cartesian(ylim = .ylim, xlim = range(time_scale)) + 
+        ggplot2::coord_cartesian(ylim = .ylim, xlim = if (is.null(.xlim)) range(time_scale) else .xlim) + 
         ggplot2::labs(color = "", fill = "", linetype = "", x = .xlab, 
             y = .ylab, title = .title)
     if (!is.null(.theme)) {
@@ -131,10 +131,10 @@ KMunicate2 = function (fit, time_scale, .risk_table = "KMunicate", .reverse = FA
                   size = .risk_table_base_size/3)
             }
             p <- p + ggplot2::scale_x_continuous(breaks = time_scale) + 
-                ggplot2::coord_cartesian(xlim = range(time_scale)) + 
+                ggplot2::coord_cartesian(xlim = if (is.null(.xlim)) range(time_scale) else .xlim) + 
                 ggplot2::theme_void(base_size = .risk_table_base_size) + 
-                ggplot2::theme(plot.margin = ggplot2::unit(c(0, 
-                  0, 0, 0), "cm"))
+                ggplot2::theme(plot.margin = ggplot2::unit(c(0, 0, 0, 0), "cm"), 
+                    plot.title = element_text(size = .risk_table_base_size))
             if (is.null(.ff)) {
                 p <- p + ggplot2::theme(axis.text.y = ggplot2::element_text(face = "italic"))
             }

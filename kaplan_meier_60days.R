@@ -6,15 +6,17 @@ library(data.table)
 library(KMunicate)
 library(survival)
 library(cowplot)
+library(writexl)
+library(stringr)
 
 source("./kmunicate2.R")
 source("./phe_data.R")
 source("./hazard_data.R")
 
-theme_set(theme_cowplot(font_size = 10))
+theme_set(theme_cowplot(font_size = 11) + theme(plot.title = element_text(size = 10)))
 
 # Load complete data set
-cd = complete_data("20210205")
+cd = complete_data("20210225")
 
 # 60 DAY VIEW
 # Assemble data set
@@ -22,304 +24,157 @@ dataS60 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, deat
 dataS60[, sgtf_label := ifelse(sgtf == 0, "Non-SGTF", "SGTF")]
 dataS60[, sgtf_label := factor(sgtf_label, c("SGTF", "Non-SGTF"))]
 
-# Summary view
+# Summary view for Fig. 1
 tsc = seq(0, 60, by = 10)
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60)
-plAA60 = KMunicate2(fit = km, time_scale = tsc, .ylim = c(0.995, 1), .margin = c(0, 0.1, 0, 0.1), .title = "Overall", .legend_position = c(0.05, 0.1), .risk_table_base_size = 9)
-
-plAA60_inset = KMunicate2(fit = km, time_scale = c(0, 60), .ylim = c(0, 1), .margin = 0.3, .title = "", .risk_table = NULL, .legend_position = "none",.ylab = "", .xlab = "") + scale_y_continuous(breaks = c(0,1), expand = expansion(0)) 
-
-plAA60_both <- ggdraw() + draw_plot(plAA60) + draw_plot(plAA60_inset, x = .5, y = .6, width = .5, height = .4)
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age < 70])
-plBB60 = KMunicate2(fit = km, time_scale = tsc, .ylim = c(0.9975, 1), .margin = c(0, 0.1, 0, 0.1), .title = "Under 70", .legend_position = c(0.05, 0.1), .risk_table_base_size = 9)
-
-plBB60_inset = KMunicate2(fit = km, time_scale = c(0, 60), .ylim = c(0, 1), .margin = 0.3, .title = "", .risk_table = NULL, .legend_position = "none",.ylab = "", .xlab = "") + scale_y_continuous(breaks = c(0,1), expand = expansion(0)) 
-
-plBB60_both <- ggdraw() + draw_plot(plBB60) + draw_plot(plBB60_inset, x = 0.6, y = .7, width = .4, height = .3)
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age >= 70])
-plCC60 = KMunicate2(fit = km, time_scale = tsc, .ylim = c(0.92, 1), .margin = c(0, 0.1, 0, 0.1), .title = "70 or older", .legend_position = c(0.05, 0.1), .risk_table_base_size = 9)
-
-plCC60_inset = KMunicate2(fit = km, time_scale = c(0, 60), .ylim = c(0, 1), .margin = 0.3, .title = "", .risk_table = NULL, .legend_position = "none",.ylab = "", .xlab = "") + scale_y_continuous(breaks = c(0,1), expand = expansion(0)) 
-
-plCC60_both <- ggdraw() + draw_plot(plCC60) + draw_plot(plCC60_inset, x = 0.6, y = .7, width = .4, height = .3)
-
-pl = cowplot::plot_grid(plAA60, plBB60, plCC60, nrow = 1, labels = letters, label_size = 10)
-ggsave("./output/kmcurves_60_main.pdf", pl, width = 45, height = 15, units = "cm", useDingbats = FALSE)
-ggsave("./output/kmcurves_60_main.png", pl, width = 45, height = 15, units = "cm")
-
-pl60_inset = cowplot::plot_grid(plAA60_both, plBB60_both, plCC60_both, nrow = 1, labels = letters, label_size = 10)
-ggsave("./output/kmcurves_60_main_inset.pdf", pl_60_inset, width = 45, height = 15, units = "cm", useDingbats = FALSE)
-ggsave("./output/kmcurves_60_main_inset.png", pl60_inset, width = 45, height = 15, units = "cm")
+plAA60 = KMunicate2(fit = km, time_scale = tsc, .xlim = c(-3, 62), .ylim = c(0.994, 1), .margin = c(0, 0.1, 0, 0.15), .title = NULL, 
+    .legend_position = c(0.05, 0.1), .risk_table_base_size = 9, .rel_heights = c(3.5, 1, 1), .align = "v")
+plAA60_inset = KMunicate2(fit = km, time_scale = c(0, 60), .ylim = c(0, 1), .margin = 0.3, .title = NULL, .risk_table = NULL, .legend_position = "none",.ylab = "", .xlab = "") + scale_y_continuous(breaks = c(0,1), expand = expansion(0)) 
+plAA60_both = ggdraw() + draw_plot(plAA60) + draw_plot(plAA60_inset, x = .47, y = .65, width = .5, height = .35)
 
 
 
 # By Sex ------------------------------------------------------------------
 
-
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[sex == "Female"])
-plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Female", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plSA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Sex: Female", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[sex == "Male"])
-plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Male", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-
-pl = cowplot::plot_grid(plA, plB, ncol = 2, labels = letters, label_size = 10)
-ggsave("./output/kmcurves_60_sex.pdf", pl, width = 10, height = 5, units = "cm", useDingbats = FALSE)
-ggsave("./output/kmcurves_60_sex.png", pl, width = 10, height = 5, units = "cm")
+plSB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Sex: Male", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 
 
 # By Age ------------------------------------------------------------------
 
 
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group == "[1,35)"])
-plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.9998, 1), .margin = 0.3, .title = "1-34", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+plAA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.9998, 1), .margin = 0.3, .title = "Age: 1-34", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group  == "[35,55)"])
-plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.998, 1), .margin = 0.3, .title = "35-54", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+plAB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.998, 1), .margin = 0.3, .title = "Age: 35-54", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group == "[55,70)"])
-plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.98, 1), .margin = 0.3, .title = "55-69", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group  %in% c("[70,85)", "[85,120)")])
-plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.90, 1), .margin = 0.3, .title = "70+", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-
-pl = cowplot::plot_grid(plA, plB, plC, plD, ncol = 2, labels = letters, label_size = 10)
-ggsave("./output/kmcurves_60_age.pdf", pl, width = 10, height = 10, units = "cm", useDingbats = FALSE)
-ggsave("./output/kmcurves_60_age.png", pl, width = 10, height = 10, units = "cm")
+plAC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.985, 1), .margin = 0.3, .title = "Age: 55-69", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group == "[70,85)"])
+plAD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.92, 1), .margin = 0.3, .title = "Age: 70-84", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[age_group == "[85,120)"])
+plAE = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.75, 1), .margin = 0.3, .title = "Age: 85+", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 
 
 # Place of residence ------------------------------------------------------
 
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[res_cat == "Residential"])
-plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.995, 1), .margin = 0.3, .title = "Residential", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plRA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.995, 1), .margin = 0.3, .title = "Residence: Residential", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[res_cat == "Care/Nursing home"])
-plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.75, 1), .margin = 0.3, .title = "Care/Nursing home", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+plRB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.75, 1), .margin = 0.3, .title = "Residence: Care/Nursing home", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[res_cat == "Other/Unknown"])
-plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.992, 1), .margin = 0.3, .title = "Other/Unknown", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-dataS60[, table(res_cat, died)]
-pl = cowplot::plot_grid(plA, plB, plC, ncol = 2, labels = letters, label_size = 10)
-ggsave("./output/kmcurves_60_res.pdf", pl, width = 15, height = 10, units = "cm", useDingbats = FALSE)
-ggsave("./output/kmcurves_60_res.png", pl, width = 15, height = 10, units = "cm")
+plRC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.992, 1), .margin = 0.3, .title = "Residence: Other/Unknown", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 
 
 # Ethnicity ---------------------------------------------------------------
 
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[eth_cat == "W"])
-plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.992, 1), .margin = 0.3, .title = "White", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plEA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.992, 1), .margin = 0.3, .title = "Ethnicity: White", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[eth_cat == "A"])
-plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.992, 1), .margin = 0.3, .title = "Asian", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+plEB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.992, 1), .margin = 0.3, .title = "Ethnicity: Asian", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[eth_cat == "B"])
-plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.992, 1), .margin = 0.3, .title = "Black", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+plEC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.992, 1), .margin = 0.3, .title = "Ethnicity: Black", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[eth_cat == "O"])
-plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.992, 1), .margin = 0.3, .title = "Other/Mixed/Unknown", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-
-pl = cowplot::plot_grid(plA, plB, plC, plD, ncol = 2, labels = letters, label_size = 10)
-ggsave("./output/kmcurves_60_eth.pdf", pl, width = 15, height = 10, units = "cm", useDingbats = FALSE)
-ggsave("./output/kmcurves_60_eth.png", pl, width = 15, height = 10, units = "cm")
+plED = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.992, 1), .margin = 0.3, .title = "Ethnicity: Other/Mixed/Unknown", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 
 
 # IMD ---------------------------------------------------------------------
 
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd1"])
-plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD 1", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd2"])
-plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD 2", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd3"])
-plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD 3", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd4"])
-plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD 4", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd5"])
-plE = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD 5", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd6"])
-plF = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD 6", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd7"])
-plG = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD 7", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd8"])
-plH = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD8", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd9"])
-plI = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD 9", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd_group == "imd10"])
-plJ = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD 10", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-
-pl = cowplot::plot_grid(plA, plB, plC, plD, plE, plF, plG, plH, plI, plJ, ncol = 2, labels = letters, label_size = 10)
-ggsave("./output/kmcurves_60_imd.pdf", pl, width = 20, height = 30, units = "cm", useDingbats = FALSE)
-ggsave("./output/kmcurves_60_imd.png", pl, width = 20, height = 30, units = "cm")
-
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd %in% c(1, 2)])
+plIA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD: 1-2", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd %in% c(3, 4)])
+plIB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD: 3-4", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd %in% c(5, 6)])
+plIC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD: 5-6", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd %in% c(7, 8)])
+plID = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD: 7-8", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[imd %in% c(9, 10)])
+plIE = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "IMD: 9-10", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 
 
 
 # NHS region --------------------------------------------------------------
 
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[NHSER_name == "London"])
-plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "London", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plNA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Region: London", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[NHSER_name == "South East"])
-plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "South East", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plNB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Region: South East", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[NHSER_name == "East of England"])
-plF = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "East of England", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plNC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Region: East of England", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[NHSER_name == "South West"])
-plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "South West", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plND = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Region: South West", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[NHSER_name == "Midlands"])
-plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Midlands", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plNE = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Region: Midlands", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[NHSER_name == "North East and Yorkshire"])
-plE = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "North East and Yorkshire", .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plNF = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Region: North East and Yorkshire", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[NHSER_name == "North West"])
-plF = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "North West", .risk_table = NULL, .legend_position = c(0.05, 0.1))
+plNG = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = "Region: North West", .risk_table = NULL, .legend_position = c(0.05, 0.1))
 
 
-pl = cowplot::plot_grid(plA, plB, plC, plD, plE, plF, ncol = 2, labels = letters, label_size = 10)
-ggsave("./output/kmcurves_60_nhs.pdf", pl, width = 15, height = 15, units = "cm", useDingbats = FALSE)
-ggsave("./output/kmcurves_60_nhs.png", pl, width = 15, height = 15, units = "cm")
+# Specimen date ----------------------------------------------------------
 
-# Speciment date ----------------------------------------------------------
-
-## Group the speciment date into 3 week categories.
+## Group the specimen date into 3 week categories.
 start_date <- as.Date("2020-11-01")
-dt_fmt <- function(x) format(x, "%d-%m-%Y")
-dataS60[between(specimen_date, start_date, start_date + 13), spec_2week := paste0(dt_fmt(start_date), " to ", dt_fmt(start_date + 13))]
-start_date <- start_date + 14
-dataS60[between(specimen_date, start_date, start_date + 13), spec_2week := paste0(dt_fmt(start_date), " to ", dt_fmt(start_date + 13))]
-start_date <- start_date + 14
-dataS60[between(specimen_date, start_date, start_date + 13), spec_2week := paste0(dt_fmt(start_date), " to ", dt_fmt(start_date + 13))]
-start_date <- start_date + 14
-dataS60[between(specimen_date, start_date, start_date + 13), spec_2week := paste0(dt_fmt(start_date), " to ", dt_fmt(start_date + 13))]
-start_date <- start_date + 14
+dt_fmt <- function(x) format(x, "%Y-%m-%d")
+dataS60[between(specimen_date, start_date, start_date + 20), spec_2week := paste0(dt_fmt(start_date), " to ", dt_fmt(start_date + 20))]
+start_date <- start_date + 21
+dataS60[between(specimen_date, start_date, start_date + 20), spec_2week := paste0(dt_fmt(start_date), " to ", dt_fmt(start_date + 20))]
+start_date <- start_date + 21
+dataS60[between(specimen_date, start_date, start_date + 20), spec_2week := paste0(dt_fmt(start_date), " to ", dt_fmt(start_date + 20))]
+start_date <- start_date + 21
+dataS60[between(specimen_date, start_date, start_date + 20), spec_2week := paste0(dt_fmt(start_date), " to ", dt_fmt(start_date + 20))]
+start_date <- start_date + 21
 dataS60[between(specimen_date, start_date, max(specimen_date)), spec_2week := paste0(dt_fmt(start_date), " to ", dt_fmt(max(specimen_date)))]
 
 spec_dates <- unique(dataS60[order(specimen_date)]$spec_2week)
-spec_dates
 
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[1]])
-plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[1], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plDA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[1], .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[2]])
-plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[2], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plDB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[2], .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[3]])
-plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[3], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plDC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[3], .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[4]])
-plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[4], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
+plDD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[4], .risk_table = NULL, .legend_position = c(0.05, 0.1))
 km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[5]])
-plE = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[5], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-dataS60[,.N, by =spec_2week][order(spec_2week)]
-
-pl = cowplot::plot_grid(plA, plB, plC, plD, plE, ncol = 2, labels = letters, label_size = 10)
-ggsave("./output/kmcurves_60_spec_week.pdf", pl, width = 15, height = 15, units = "cm", useDingbats = FALSE)
-ggsave("./output/kmcurves_60_spec_week.png", pl, width = 15, height = 15, units = "cm")
+plDE = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[5], .risk_table = NULL, .legend_position = c(0.05, 0.1))
 
 
+# sex SA-SB
+# age AA-AE
+# res RA-RC
+# eth EA-ED
+# nhs region NA-NG
+# imd IA-IE
+# date DA-DE
 
+big_km = plot_grid(
+    plSA, plSB, plAA, plAB, plAC, plAD, plAE,
+    plRA, plRB, plRC, plEA, plEB, plEC, plED,
+    plNA, plNB, plNC, plND, plNE, plNF, plNG,
+    plIA, plIB, plIC, plID, plIE, ggdraw(), ggdraw(),
+    plDA, plDB, plDC, plDD, plDE, ggdraw(), ggdraw(),
+    byrow = FALSE, nrow = 7, align = "hv", label_size = 11, labels = letters)
 
+ggsave("./output/sfigKM.pdf", big_km, width = 40, height = 40, units = "cm", device = cairo_pdf)
+ggsave("./output/sfigKM.png", big_km, width = 40, height = 40, units = "cm")
 
+kmplot_to_data = function(kmlist)
+{
+    dat = list()
+    for (km in kmlist)
+    {
+        dat[[str_replace_all(km$labels$title, "[: /]", "")]] = km$data
+    }
+    dat
+}
 
-# Specimen date age 35 ----------------------------------------------------------
+km_sdata = kmplot_to_data(list(
+    plSA, plSB, plAA, plAB, plAC, plAD, plAE,
+    plRA, plRB, plRC, plEA, plEB, plEC, plED,
+    plNA, plNB, plNC, plND, plNE, plNF, plNG,
+    plIA, plIB, plIC, plID, plIE, 
+    plDA, plDB, plDC, plDD, plDE))
 
-## Group the speciment date into 3 week categories.
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[1] & !age_group %in% c("(0,35]")])
-plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[1], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[2] & !age_group %in% c("(0,35]")])
-plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[2], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[3] & !age_group %in% c("(0,35]")])
-plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[3], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[4] & !age_group %in% c("(0,35]")])
-plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[4], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[5] & !age_group %in% c("(0,35]")])
-plE = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.99, 1), .margin = 0.3, .title = spec_dates[5], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-dataS60[,.N, by =spec_2week][order(spec_2week)]
-
-pl = cowplot::plot_grid(plA, plB, plC, plD, plE, ncol = 2, labels = letters, label_size = 10)
-ggsave("./output/kmcurves_60_spec_week_age35plus.pdf", pl, width = 15, height = 15, units = "cm", useDingbats = FALSE)
-ggsave("./output/kmcurves_60_spec_week_age35plus.png", pl, width = 15, height = 15, units = "cm")
-
-# Specimen date age 55 ----------------------------------------------------------
-
-## Group the speciment date into 3 week categories.
-
-age_groups_ = c("(0,35]", "(35,55]")
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[1] & !age_group %in% age_groups_])
-plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.96, 1), .margin = 0.3, .title = spec_dates[1], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[2] & !age_group %in% age_groups_])
-plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.96, 1), .margin = 0.3, .title = spec_dates[2], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[3] & !age_group %in% age_groups_])
-plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.96, 1), .margin = 0.3, .title = spec_dates[3], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[4] & !age_group %in% age_groups_])
-plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.96, 1), .margin = 0.3, .title = spec_dates[4], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[5] & !age_group %in% age_groups_])
-plE = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.96, 1), .margin = 0.3, .title = spec_dates[5], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-dataS60[,.N, by =spec_2week][order(spec_2week)]
-
-pl = cowplot::plot_grid(plA, plB, plC, plD, plE, ncol = 2, labels = letters, label_size = 10)
-ggsave("./output/kmcurves_60_spec_week_age55plus.pdf", pl, width = 15, height = 15, units = "cm", useDingbats = FALSE)
-ggsave("./output/kmcurves_60_spec_week_age55plus.png", pl, width = 15, height = 15, units = "cm")
-
-# Specimen date age 70 ----------------------------------------------------------
-
-## Group the speciment date into 3 week categories.
-
-age_groups_ = c("(0,35]", "(35,55]", "(55,70]")
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[1] & !age_group %in% age_groups_])
-plA = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.86, 1), .margin = 0.3, .title = spec_dates[1], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[2] & !age_group %in% age_groups_])
-plB = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.86, 1), .margin = 0.3, .title = spec_dates[2], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[3] & !age_group %in% age_groups_])
-plC = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.86, 1), .margin = 0.3, .title = spec_dates[3], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[4] & !age_group %in% age_groups_])
-plD = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.86, 1), .margin = 0.3, .title = spec_dates[4], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-km = survfit(Surv(time, status) ~ sgtf_label, data = dataS60[spec_2week == spec_dates[5] & !age_group %in% age_groups_])
-plE = KMunicate2(fit = km, time_scale = seq(0, 60, by = 10), .ylim = c(0.86, 1), .margin = 0.3, .title = spec_dates[5], .risk_table = NULL, .legend_position = c(0.05, 0.1))
-
-dataS60[,.N, by =spec_2week][order(spec_2week)]
-
-pl = cowplot::plot_grid(plA, plB, plC, plD, plE, ncol = 2, labels = letters, label_size = 10)
-ggsave("./output/kmcurves_60_spec_week_age70plus.pdf", pl, width = 15, height = 15, units = "cm", useDingbats = FALSE)
-ggsave("./output/kmcurves_60_spec_week_age70plus.png", pl, width = 15, height = 15, units = "cm")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+write_xlsx(km_sdata, "./manuscript/sdE_km.xlsx")

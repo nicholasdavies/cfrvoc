@@ -39,7 +39,13 @@ complete_data = function(dateid, sgtfv_file = "./sgtf_voc.csv")
 # Load reduced data set
 reduced_data = function(dateid, sgtfv_file = "./sgtf_voc.csv")
 {
-    return (qread(paste0("./dataset/reduced_data_", dateid, ".qs")))
+    d = qread(paste0("./dataset/reduced_data_", dateid, ".qs"));
+
+    # sgtfvoc: from misclassification.R
+    sgtfvoc = fread(sgtfv_file)
+    d = merge(d, sgtfvoc[, .(specimen_date.x = date, NHSER_name = group, sgtfv)], by = c("specimen_date.x", "NHSER_name"), all.x = TRUE)
+    
+    return (d)
 }
 
 # Make reduced data set from complete_data 
@@ -56,7 +62,6 @@ make_reduced = function(d)
         specimen_date.x,
         sgtf,
         sgtf_under30CT,
-        sgtfv,
         imd_decile,
         ethnicity_final.x,
         cat,
@@ -182,7 +187,8 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
             covidcod = ifelse(!is.na(covidcod) & covidcod == "Y", 1, 0),
             death_type28 = ifelse(is.na(death_type28), 0, death_type28),
             death_type60cod = ifelse(is.na(death_type60cod), 0, death_type60cod),
-            data_id)];
+            data_id,
+            person_id = FINALID)];
     
     if (!keep_missing) {
         data = data[!is.na(sgtf)]
@@ -195,13 +201,13 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
     # Cutoff based upon LTLA prevalence of "false positives" from prior to Oct 15
     if (prevalence_cutoff)
     {
-        prior_sgtf = data[specimen_date >= "2020-09-01" & specimen_date <= "2020-10-15", .(nhs_sgtf = mean(sgtf, na.rm = T)), by = NHSER_name]
-        baseline_ltla = data[specimen_date >= "2020-09-01" & specimen_date <= "2020-10-15", .(Ns = sum(sgtf == 1, na.rm = T), No = sum(sgtf == 0, na.rm = T)), by = .(NHSER_name, LTLA_name)]
+        prior_sgtf = data[!is.na(sgtf) & specimen_date >= "2020-09-01" & specimen_date <= "2020-10-15", .(nhs_sgtf = mean(sgtf, na.rm = T)), by = NHSER_name]
+        baseline_ltla = data[!is.na(sgtf) & specimen_date >= "2020-09-01" & specimen_date <= "2020-10-15", .(Ns = sum(sgtf == 1, na.rm = T), No = sum(sgtf == 0, na.rm = T)), by = .(NHSER_name, LTLA_name)]
         baseline_ltla = merge(baseline_ltla, prior_sgtf, by = "NHSER_name")
         baseline_ltla = baseline_ltla[, .(priorS = sum(Ns) + mean(nhs_sgtf) * 100, priorO = sum(No) + mean(1 - nhs_sgtf) * 100), by = LTLA_name]
         baseline_ltla[, baseline := priorS / (priorS + priorO)]
         
-        trace = data[specimen_date >= "2020-09-01", .(sgtf = mean(sgtf, na.rm = T), nspec = .N), keyby = .(LTLA_name, specimen_date)]
+        trace = data[!is.na(sgtf) & specimen_date >= "2020-09-01", .(sgtf = mean(sgtf, na.rm = T), nspec = .N), keyby = .(LTLA_name, specimen_date)]
         trace[is.nan(sgtf), sgtf := 0]
         trace = merge(trace, baseline_ltla, by = "LTLA_name")
         trace[, indicator := sgtf > 1 - (1 - baseline)^2]
@@ -209,7 +215,7 @@ model_data = function(d, criterion, remove_duplicates, death_cutoff, reg_cutoff,
         trace[, n_bad_remaining := rev(cumsum(rev((!indicator) * nspec))), by = LTLA_name]
         co = trace[n_bad_remaining <= n_good_so_far, .(date_cutoff = min(specimen_date)), by = LTLA_name]
         
-        data = merge(data, co, by = "LTLA_name")
+        data = merge(data, co, by = "LTLA_name", all.x = TRUE)
         data = data[specimen_date >= date_cutoff]
         data[, date_cutoff := NULL]
     }
@@ -305,14 +311,27 @@ prep_data = function(data)
     data[, `Sex` := factor(sex)]
     data[, `Age` := factor(revalue(age_group,
         c(
-            "[1,35)" = "1–34",
-            "[35,55)" = "35–54",
-            "[55,70)" = "55–69",
-            "[70,85)" = "70–84",
+            "[1,35)" = "1-34",
+            "[35,55)" = "35-54",
+            "[55,70)" = "55-69",
+            "[70,85)" = "70-84",
             "[85,120)" = "85 and older"
-        )), levels = c("1–34", "35–54", "55–69", "70–84", "85 and older"))]
+        )), levels = c("1-34", "35-54", "55-69", "70-84", "85 and older"))]
     data[, `Place of residence` := factor(res_cat)]
     data[, `Index of Multiple Deprivation decile` := factor(imd, levels = 1:10)]
+    data[, `IMD decile` := factor(revalue(`Index of Multiple Deprivation decile`,
+        c(
+            "1" = "1-2 (most deprived)",
+            "2" = "1-2 (most deprived)",
+            "3" = "3-4",
+            "4" = "3-4",
+            "5" = "5-6",
+            "6" = "5-6",
+            "7" = "7-8",
+            "8" = "7-8",
+            "9" = "9-10",
+            "10" = "9-10"
+        )), levels = c("1-2 (most deprived)", "3-4", "5-6", "7-8", "9-10"))]
     data[, `Ethnicity` := factor(revalue(eth_cat,
         c(
             "W" = "White",
@@ -321,13 +340,13 @@ prep_data = function(data)
             "O" = "Other/Mixed/Unknown"
         )), levels = c("White", "Asian", "Black", "Other/Mixed/Unknown"))]
     data[, `NHS England region` := factor(NHSER_name)]
-    data[, spec_date_ind := as.numeric(specimen_date - ymd("2020-11-01")) %/% 14]
+    data[, spec_date_ind := as.numeric(specimen_date - ymd("2020-11-01")) %/% 21]
     
-    # If last 2-week period contains 7 days or fewer, combine with penultimate period
-    if (data[spec_date_ind == max(spec_date_ind), uniqueN(specimen_date) <= 7]) {
+    # If last 3-week period contains 10 days or fewer, combine with penultimate period
+    if (data[spec_date_ind == max(spec_date_ind), uniqueN(specimen_date) <= 10]) {
         data[spec_date_ind == max(spec_date_ind), spec_date_ind := spec_date_ind - 1];
     }
-    data[, `Specimen date` := paste0(str_trim(format(min(specimen_date), "%e %b")), "–", str_trim(format(max(specimen_date), "%e %b"))), by = spec_date_ind]
+    data[, `Specimen date` := paste0(str_trim(format(min(specimen_date), "%e %b")), "-", str_trim(format(max(specimen_date), "%e %b"))), by = spec_date_ind]
     data[, `Specimen date` := factor(`Specimen date`, levels = data[order(spec_date_ind), unique(`Specimen date`)])]
     data[, ` ` := ""]
     

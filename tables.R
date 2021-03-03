@@ -165,8 +165,39 @@ do_table_deathrate = function(dataS, what, keep_missing = FALSE)
 }
 
 # Load complete data set
-cd = complete_data("20210205")
+cd = complete_data("20210225")
 cd[, table(sgtf, useNA = "ifany")]
+
+# Basic missingness stats
+cd2 = cd[pillar == "Pillar 2" & specimen_date.x >= "2020-11-01"]
+cd2[is.na(age), .N]
+cd2[sex == "Unknown", .N]
+cd2[is.na(imd_decile), .N]
+cd2[ethnicity_final.x == "Unknown", .N]
+100 * cd2[ethnicity_final.x == "Unknown", .N] / cd2[, .N]
+cd2[cat == "Undetermined" | cat == "", .N]
+100 * cd2[cat == "Undetermined" | cat == "", .N] / cd2[, .N]
+
+# Types of missingness
+dataS_all = model_data(cd, criterion = "all", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0,
+    date_min = "2020-11-01", keep_missing = TRUE)
+dataS_u30 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0,
+    date_min = "2020-11-01", keep_missing = TRUE)
+
+dataS_all[, table(sgtf, useNA = "ifany")]
+dataS_u30[, table(sgtf, useNA = "ifany")]
+# 20210225:
+# dataS_all[, table(sgtf, useNA = "ifany")]
+# sgtf
+#          0      1    <NA> 
+# all 586707 674539  984017 
+# u30 471995 674539 1098729 
+
+# 2,245,263 total tests
+#   984,017 missing due to not assessed (43.8%) }
+#   114,712 missing due to low CT        (5.1%) } 48.9%
+#   471,995 confirmed non-SGTF          (21.0%) }
+#   674,539 confirmed SGTF              (30.0%) } 51.1%
 
 # Assemble data set. 
 dataS = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0,
@@ -180,7 +211,7 @@ prevalence = rbind(
     do_table_prevalence(dataS, "Age"),
     do_table_prevalence(dataS, "Place of residence"),
     do_table_prevalence(dataS, "Ethnicity"),
-    do_table_prevalence(dataS, "Index of Multiple Deprivation decile"),
+    do_table_prevalence(dataS, "IMD decile"),
     do_table_prevalence(dataS, "NHS England region"),
     do_table_prevalence(dataS, "Specimen date")
 )
@@ -195,7 +226,7 @@ missingness_tbl = rbind(
     do_table_missingness(dataS, "Age"),
     do_table_missingness(dataS, "Place of residence"),
     do_table_missingness(dataS, "Ethnicity"),
-    do_table_missingness(dataS, "Index of Multiple Deprivation decile"),
+    do_table_missingness(dataS, "IMD decile"),
     do_table_missingness(dataS, "NHS England region"),
     do_table_missingness(dataS, "Specimen date")
 )
@@ -210,7 +241,7 @@ specimens = rbind(
     do_table_specimens(dataS, "Age"),
     do_table_specimens(dataS, "Place of residence"),
     do_table_specimens(dataS, "Ethnicity"),
-    do_table_specimens(dataS, "Index of Multiple Deprivation decile"),
+    do_table_specimens(dataS, "IMD decile"),
     do_table_specimens(dataS, "NHS England region"),
     do_table_specimens(dataS, "Specimen date")
 )
@@ -221,7 +252,7 @@ specimens_missing = rbind(
     do_table_specimens(dataS, "Age", keep_missing = TRUE),
     do_table_specimens(dataS, "Place of residence", keep_missing = TRUE),
     do_table_specimens(dataS, "Ethnicity", keep_missing = TRUE),
-    do_table_specimens(dataS, "Index of Multiple Deprivation decile", keep_missing = TRUE),
+    do_table_specimens(dataS, "IMD decile", keep_missing = TRUE),
     do_table_specimens(dataS, "NHS England region", keep_missing = TRUE),
     do_table_specimens(dataS, "Specimen date", keep_missing = TRUE)
 )
@@ -235,7 +266,7 @@ table1 = cbind(
     missingness_tbl[, 2]
 )
 
-fwrite(table1, "./output/table1.csv")
+fwrite(table1, "./output/extended_table_1.csv")
 
 
 # All deaths
@@ -245,7 +276,7 @@ deaths = rbind(
     do_table_deaths(dataS, "Age"),
     do_table_deaths(dataS, "Place of residence"),
     do_table_deaths(dataS, "Ethnicity"),
-    do_table_deaths(dataS, "Index of Multiple Deprivation decile"),
+    do_table_deaths(dataS, "IMD decile"),
     do_table_deaths(dataS, "NHS England region"),
     do_table_deaths(dataS, "Specimen date")
 )
@@ -256,7 +287,7 @@ deaths_missing = rbind(
     do_table_deaths(dataS, "Age", keep_missing = TRUE),
     do_table_deaths(dataS, "Place of residence", keep_missing = TRUE),
     do_table_deaths(dataS, "Ethnicity", keep_missing = TRUE),
-    do_table_deaths(dataS, "Index of Multiple Deprivation decile", keep_missing = TRUE),
+    do_table_deaths(dataS, "IMD decile", keep_missing = TRUE),
     do_table_deaths(dataS, "NHS England region", keep_missing = TRUE),
     do_table_deaths(dataS, "Specimen date", keep_missing = TRUE)
 )
@@ -271,7 +302,7 @@ deathrate_28 = rbind(
     do_table_deathrate(dataS, "Age"),
     do_table_deathrate(dataS, "Place of residence"),
     do_table_deathrate(dataS, "Ethnicity"),
-    do_table_deathrate(dataS, "Index of Multiple Deprivation decile"),
+    do_table_deathrate(dataS, "IMD decile"),
     do_table_deathrate(dataS, "NHS England region"),
     do_table_deathrate(dataS, "Specimen date")
 )
@@ -281,13 +312,13 @@ deathrate_28_missing = rbind(
     do_table_deathrate(dataS, "Age", keep_missing = TRUE),
     do_table_deathrate(dataS, "Place of residence", keep_missing = TRUE),
     do_table_deathrate(dataS, "Ethnicity", keep_missing = TRUE),
-    do_table_deathrate(dataS, "Index of Multiple Deprivation decile", keep_missing = TRUE),
+    do_table_deathrate(dataS, "IMD decile", keep_missing = TRUE),
     do_table_deathrate(dataS, "NHS England region", keep_missing = TRUE),
     do_table_deathrate(dataS, "Specimen date", keep_missing = TRUE)
 )
 
 fwrite(deathrate_28, "./output/old_table3.csv")
-fwrite(deathrate_28_missing, "./output/table2.csv")
+fwrite(deathrate_28_missing, "./output/extended_table_2.csv")
 
 # With full followup
 dataS999 = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 999, reg_cutoff = 10, P_voc = 0,
@@ -300,7 +331,7 @@ deathrate_full = rbind(
     do_table_deathrate(dataS999, "Age"),
     do_table_deathrate(dataS999, "Place of residence"),
     do_table_deathrate(dataS999, "Ethnicity"),
-    do_table_deathrate(dataS999, "Index of Multiple Deprivation decile"),
+    do_table_deathrate(dataS999, "IMD decile"),
     do_table_deathrate(dataS999, "NHS England region"),
     do_table_deathrate(dataS999, "Specimen date")
 )
@@ -311,12 +342,12 @@ deathrate_full_missing = rbind(
     do_table_deathrate(dataS999, "Age", keep_missing = TRUE),
     do_table_deathrate(dataS999, "Place of residence", keep_missing = TRUE),
     do_table_deathrate(dataS999, "Ethnicity", keep_missing = TRUE),
-    do_table_deathrate(dataS999, "Index of Multiple Deprivation decile", keep_missing = TRUE),
+    do_table_deathrate(dataS999, "IMD decile", keep_missing = TRUE),
     do_table_deathrate(dataS999, "NHS England region", keep_missing = TRUE),
     do_table_deathrate(dataS999, "Specimen date", keep_missing = TRUE)
 )
 
-fwrite(deathrate_full_missing, "./output/table_S1.csv")
+fwrite(deathrate_full_missing, "./output/SI_table_1.csv")
 
 
 # Absolute risk -----------------------------------------------------------
@@ -325,8 +356,8 @@ fwrite(deathrate_full_missing, "./output/table_S1.csv")
 summaries = fread("./output/model_summary.csv")
 cc28_b   = summaries[model_id == "d28.SGTF.ss.2020-11-01..r10.LTLA:date..cc"  & parameter == "sgtf", coef]
 cc28_se  = summaries[model_id == "d28.SGTF.ss.2020-11-01..r10.LTLA:date..cc"  & parameter == "sgtf", se_coef]
-ipw28_b  = summaries[model_id == "d28.SGTF.ss.2020-11-01..r10.LTLA:date..ipw" & parameter == "sgtf", coef]
-ipw28_se = summaries[model_id == "d28.SGTF.ss.2020-11-01..r10.LTLA:date..ipw" & parameter == "sgtf", se_coef]
+ipw28_b  = summaries[model_id == "d28.pVOC.ss.2020-11-01..r10.LTLA:date..ipw" & parameter == "p_voc", coef]
+ipw28_se = summaries[model_id == "d28.pVOC.ss.2020-11-01..r10.LTLA:date..ipw" & parameter == "p_voc", se_coef]
 
 #
 # CC
@@ -342,7 +373,7 @@ cfr_28[, cfr := died/N]
 cfr_28[, cfr_se := cfr*(1-cfr)/N]
 cfr_28[, cfr_lci := cfr - 1.96*cfr_se]
 cfr_28[, cfr_uci := cfr + 1.96*cfr_se]
-cfr_28[, x:= 1-cfr]
+cfr_28[, x := 1-cfr]
 cfr_28[, x_se := x*(1-x)/N]
 
 ## absolute risk
@@ -414,8 +445,81 @@ abs_risk_tab1
 abs_risk_tab2
 
 abs_risk_tab = cbind(abs_risk_tab1[, 1:4], abs_risk_tab2[, 4])
-names(abs_risk_tab) = c("Sex", "Age", "Baseline CFR", "Variant CFR (complete cases)", "Variant CFR (IPW)")
+names(abs_risk_tab) = c("Sex", "Age", "Baseline CFR", "SGTF CFR (complete cases)", "pVOC CFR (IPW)")
 abs_risk_tab = abs_risk_tab[order(Sex, Age)]
 abs_risk_tab[Age == "85+", Age := "85 and older"]
 abs_risk_tab
-fwrite(abs_risk_tab, "./output/table5.csv")
+fwrite(abs_risk_tab, "./output/table1.csv")
+
+
+
+# Cross tabulated table
+
+# in terms of IMD, rather than linearity, deprivation is generally significantly different between 1+2 vs 9+10 with 3-8 in between. 
+# The table I'd like to see has 120 cross-classifications as follows; specimen date (5) & age-group (4, starting at 1-54 years) * 
+# IMD (3, as above) * NHSE regions (2, ie the three regions where VOC was first noted versus the rest). For each cell, 
+# provide # SGTF cases, deaths, follow-up days and death-rates and similarly for non-SGTF cases.
+
+dataX = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0,
+    date_min = "2020-11-01", keep_missing = FALSE)
+
+dates = list(
+    ymd(c("2020-11-01", "2020-11-20")),
+    ymd(c("2020-11-01", "2020-11-20")) + 21,
+    ymd(c("2020-11-01", "2020-11-20")) + 42,
+    ymd(c("2020-11-01", "2020-11-20")) + 63,
+    ymd(c("2020-11-01", "2020-11-22")) + 84
+)
+
+ages = list(
+    c(1, 54),
+    c(55, 69),
+    c(70, 84),
+    c(85, 120)
+)
+
+IMDs = list(
+    c(1, 2),
+    c(3, 8),
+    c(9, 10)
+)
+
+NHSERs = list(
+    c("East of England", "London", "South East"),
+    c("Midlands", "North East and Yorkshire", "North West", "South West")
+)
+
+# provide # SGTF cases, deaths, follow-up days and death-rates and similarly for non-SGTF cases.
+
+xt_cell = function(dataS, dates, ages, IMDs, NHSERs)
+{
+    dataS[specimen_date %between% dates &
+            age %between% ages &
+            imd %between% IMDs &
+            NHSER_name %in% NHSERs, 
+        paste0("SGTF: ", sum(sgtf == 1), " cases, ", sum(sgtf == 1 & died == TRUE), " deaths / ", sum(time[sgtf == 1]),  " days (", 
+            round(10000 * sum(sgtf == 1 & died == TRUE)  / sum(time[sgtf == 1]), 2),  ")\n",
+           "Non-SGTF: ", sum(sgtf == 0), " cases, ", sum(sgtf == 0 & died == TRUE), " deaths / ", sum(time[sgtf == 0]), " days (", 
+            round(10000 * sum(sgtf == 0 & died == TRUE) / sum(time[sgtf == 0]), 2), ")")]
+}
+
+xt = matrix("", nrow = 14*5, ncol = 4)
+
+for (di in 1:5) {
+    for (ai in 1:4) {
+        for (ii in 1:3) {
+            for (ni in 1:2) {
+                cat(".")
+                cell = xt_cell(dataX, dates[[di]], ages[[ai]], IMDs[[ii]], NHSERs[[ni]])
+                xt[ai * 3 + ii + di * 14 - 15, ni + 2] = cell;
+
+                xt[di * 14 - 13, ni + 2] = paste0(dates[[di]][1], " - ", dates[[di]][2]);
+                xt[di * 14 - 12, ni + 2] = if (ni == 1) "EE, LD, SE" else "ML, NEY, NW, SW";
+                xt[ai * 3 + ii + di * 14 - 15, 1] = paste0("Age ", ages[[ai]][1], " - ", ages[[ai]][2]);
+                xt[ai * 3 + ii + di * 14 - 15, 2] = paste0("IMD ", IMDs[[ii]][1], " - ", IMDs[[ii]][2]);
+            }
+        }
+    }
+}
+
+fwrite(xt, "./output/SI_table_2.csv")
