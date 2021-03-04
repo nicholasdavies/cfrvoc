@@ -455,11 +455,6 @@ fwrite(abs_risk_tab, "./output/table1.csv")
 
 # Cross tabulated table
 
-# in terms of IMD, rather than linearity, deprivation is generally significantly different between 1+2 vs 9+10 with 3-8 in between. 
-# The table I'd like to see has 120 cross-classifications as follows; specimen date (5) & age-group (4, starting at 1-54 years) * 
-# IMD (3, as above) * NHSE regions (2, ie the three regions where VOC was first noted versus the rest). For each cell, 
-# provide # SGTF cases, deaths, follow-up days and death-rates and similarly for non-SGTF cases.
-
 dataX = model_data(cd, criterion = "under30CT", remove_duplicates = TRUE, death_cutoff = 28, reg_cutoff = 10, P_voc = 0,
     date_min = "2020-11-01", keep_missing = FALSE)
 

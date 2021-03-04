@@ -92,5 +92,17 @@ plot_grid(plO, plN, nrow = 1, labels = letters, label_size = 10)
 ggsave("./output/ct.pdf", width = 25, height = 12, units = "cm", useDingbats = FALSE)
 ggsave("./output/ct.png", width = 25, height = 12, units = "cm")
 
+# source data
+counts = dataS[specimen_date >= "2020-01-01"]
+counts[, ct_ORF1ab := cut(ctORF1ab, 0:30)]
+counts[, ct_N := cut(ctN, 0:30)]
+
+library(writexl)
+
+write_xlsx(list(
+    ORF1ab = counts[, .N, keyby = .(sgtf, NHSER_name, ct_ORF1ab)],
+    N = counts[, .N, keyby = .(sgtf, NHSER_name, ct_N)]
+), "./manuscript/sdE_ct.xlsx")
+
 dataS[specimen_date >= "2021-01-01", mean(ctORF1ab), by = .(sgtf, NHSER_name)]
 dataS[specimen_date >= "2021-01-01", mean(ctN), by = .(sgtf, NHSER_name)]
