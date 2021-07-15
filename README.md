@@ -21,3 +21,9 @@ Anonymised data sets live in the `./dataset/` folder.
 `survival.R` is the main analysis file for the survival analyses. Calls to the R function `complete_data` can be replaced with 
 calls to the R function `reduced_data` to load an anonymised data set. All output goes to the `./output/` folder which you will 
 need to create in the project directory.
+
+# Access to the data
+
+If you either can't read qs files, or cannot download the anonymised data from this repository (possibly because I have run out 
+of LFS storage space on Github), or just prefer to work with CSV format data, the anonymised data are also available to download 
+in CSV format from https://zenodo.org/record/5105921.
